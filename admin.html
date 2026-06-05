@@ -190,6 +190,11 @@
         <span class="field-label">Hasta</span>
         <input type="time" class="field-input" id="hora-fin" style="max-width:130px">
       </div>
+      <div class="field-row">
+        <span class="field-label">Descuento 1er pedido</span>
+        <input type="number" class="field-input" id="input-descuento" min="0" max="100" step="1" style="max-width:80px">
+        <span style="color:var(--muted);font-size:.9rem">%</span>
+      </div>
       <button class="btn-guardar" id="btn-guardar-delivery">Guardar</button>
       <div class="feedback" id="feedback-delivery"></div>
     </div>
@@ -368,6 +373,7 @@
     document.getElementById('input-gratis-desde').value = config.delivery_gratis_desde || '6000';
     document.getElementById('hora-inicio').value      = minToTime(parseInt(config.delivery_hora_inicio));
     document.getElementById('hora-fin').value         = minToTime(parseInt(config.delivery_hora_fin));
+    document.getElementById('input-descuento').value  = config.descuento_primer_pedido || '0';
   }
 
   document.getElementById('btn-guardar-delivery').addEventListener('click', async () => {
@@ -385,6 +391,7 @@
       escribirConfig('delivery_gratis_desde',document.getElementById('input-gratis-desde').value),
       escribirConfig('delivery_hora_inicio', String(ini)),
       escribirConfig('delivery_hora_fin',    String(fin)),
+      escribirConfig('descuento_primer_pedido', document.getElementById('input-descuento').value),
     ]);
     btn.disabled = false;
     resultados.every(r=>r.ok) ? fb('feedback-delivery','✓ Guardado','ok') : fb('feedback-delivery','Error al guardar','err');
