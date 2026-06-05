@@ -28,4 +28,5 @@ export const STORAGE_KEYS = {
   device_id:         'o300_device_id',
   ubicacion:         'o300_ubicacion',
   rate_limit:        'o300_rate_limit',
+  sesion:            'o300_sesion',
 };
