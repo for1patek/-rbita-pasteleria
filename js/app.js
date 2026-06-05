@@ -123,6 +123,14 @@ function iniciarModal() {
 
     renderizarResumenModal();
     mostrarBannerDescuento();
+
+    // Autocompletar nombre si hay sesión
+    const inputNombre = document.getElementById('input-nombre');
+    const sesionActual = obtenerSesion();
+    if (inputNombre && sesionActual?.nombre) {
+      inputNombre.value = sesionActual.nombre;
+    }
+
     modal.classList.add('visible');
     document.body.classList.add('modal-open');
   });
