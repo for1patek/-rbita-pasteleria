@@ -4,7 +4,7 @@
 
 import { iniciarSlider }           from './slider.js';
 import { cargarProductos, renderizarMenu, productosDB } from './productos.js';
-import { alCambiar, obtenerResumen, estaVacio, vaciar, calcularDelivery } from './carrito.js';
+import { alCambiar, obtenerResumen, estaVacio, vaciar, calcularDelivery, calcularDescuento } from './carrito.js';
 import { obtenerDeviceId }         from './seguridad.js';
 import { obtenerOCrearCliente }    from './db.js';
 import { obtenerUbicacionGuardada, guardarUbicacion, pedirGPS, limpiarUbicacionGuardada, coordsADireccion, coordsALink } from './ubicacion.js';
@@ -14,10 +14,12 @@ import { leerConfig, deliveryDisponible, minAHora } from './config-panel.js';
 import { obtenerSesion, cerrarSesion, registrar, login, estaLogueado } from './auth.js';
 
 // ── Estado global ─────────────────────────
-let deviceId    = null;
-let ubicacion   = null;
-let conDelivery = false;
-let configApp   = null;
+let deviceId      = null;
+let ubicacion     = null;
+let conDelivery   = false;
+let configApp     = null;
+let descuentoPct  = 0;    // % leído desde config_pasteleria
+let esPrimerPedido = false; // se verifica al abrir el modal
 
 // ── Inicializar ───────────────────────────
 
@@ -35,6 +37,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         '<p class="error-msg">No se pudo cargar el menú. Intenta recargar la página.</p>';
     }),
   ]);
+
+  descuentoPct = parseInt(configApp?.descuento_primer_pedido ?? '0') || 0;
 
   iniciarSlider({ trackId: 'track', dotsId: 'dots' });
   alCambiar(actualizarBotonFlotante);
@@ -99,9 +103,26 @@ function iniciarModal() {
   const inputNombre      = document.getElementById('input-nombre');
   const btnWsp           = document.getElementById('btn-enviar-wsp');
 
-  btn?.addEventListener('click', () => {
+  btn?.addEventListener('click', async () => {
     if (estaVacio()) return;
+
+    // Verificar si es primer pedido (solo si hay sesión registrada)
+    esPrimerPedido = false;
+    const sesion = obtenerSesion();
+    if (sesion?.telefono && descuentoPct > 0) {
+      try {
+        const { SUPABASE_URL, SUPABASE_KEY } = await import('./config.js');
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/pedidos?device_id=eq.${encodeURIComponent(deviceId)}&select=id&limit=1`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+        );
+        const prev = await res.json().catch(() => [null]);
+        esPrimerPedido = prev.length === 0;
+      } catch { esPrimerPedido = false; }
+    }
+
     renderizarResumenModal();
+    mostrarBannerDescuento();
     modal.classList.add('visible');
     document.body.classList.add('modal-open');
   });
@@ -217,21 +238,50 @@ function renderizarResumenModal() {
 }
 
 function actualizarTotalModal() {
-  const resumen    = obtenerResumen();
-  const costoD     = calcularDelivery(conDelivery);
-  const total      = resumen.subtotal + costoD;
+  const resumen      = obtenerResumen();
+  const descuento    = esPrimerPedido ? calcularDescuento(resumen.subtotal, descuentoPct) : 0;
+  const costoD       = calcularDelivery(conDelivery);
+  const total        = resumen.subtotal - descuento + costoD;
 
-  const elSubtotal    = document.getElementById('modal-subtotal');
-  const elDelivery    = document.getElementById('modal-delivery');
-  const elTotal       = document.getElementById('modal-total');
-  const elDeliveryRow = document.getElementById('modal-delivery-row');
+  const elSubtotal      = document.getElementById('modal-subtotal');
+  const elDelivery      = document.getElementById('modal-delivery');
+  const elTotal         = document.getElementById('modal-total');
+  const elDeliveryRow   = document.getElementById('modal-delivery-row');
+  const elDescRow       = document.getElementById('modal-descuento-row');
+  const elDescMonto     = document.getElementById('modal-descuento-monto');
+  const elDeliveryNota  = document.getElementById('modal-delivery-nota');
 
   if (elSubtotal)    elSubtotal.textContent = `$${resumen.subtotal.toLocaleString('es-CL')}`;
+
+  // Fila descuento
+  if (elDescRow) {
+    if (descuento > 0) {
+      elDescRow.style.display = 'flex';
+      if (elDescMonto) elDescMonto.textContent = `-$${descuento.toLocaleString('es-CL')}`;
+    } else {
+      elDescRow.style.display = 'none';
+    }
+  }
+
+  // Fila delivery
   if (elDeliveryRow) elDeliveryRow.style.display = conDelivery ? 'flex' : 'none';
   if (elDelivery) {
     elDelivery.textContent = costoD === 0 ? 'Gratis 🎉' : `$${costoD.toLocaleString('es-CL')}`;
     elDelivery.className   = costoD === 0 ? 'modal-delivery-gratis' : '';
   }
+
+  // Nota delivery gratis calculada sobre precio original
+  if (elDeliveryNota && conDelivery) {
+    if (costoD === 0) {
+      elDeliveryNota.textContent = descuento > 0
+        ? `Gratis porque tu compra original supera $${(DELIVERY.gratis_desde).toLocaleString('es-CL')}`
+        : '';
+      elDeliveryNota.style.display = descuento > 0 ? 'block' : 'none';
+    } else {
+      elDeliveryNota.style.display = 'none';
+    }
+  }
+
   if (elTotal) elTotal.textContent = `$${total.toLocaleString('es-CL')}`;
 
   const btnD = document.getElementById('btn-delivery');
@@ -253,6 +303,17 @@ function mostrarUbicacionGuardada() {
   if (divNueva)    divNueva.style.display    = 'none';
 }
 
+function mostrarBannerDescuento() {
+  const banner = document.getElementById('banner-descuento');
+  if (!banner) return;
+  if (esPrimerPedido && descuentoPct > 0) {
+    banner.textContent = `🎉 Tienes un ${descuentoPct}% de descuento en tu primer pedido`;
+    banner.style.display = 'block';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
 async function enviar(canal) {
   const inputNombre   = document.getElementById('input-nombre');
   const nombreCliente = inputNombre?.value?.trim() || '';
@@ -271,6 +332,8 @@ async function enviar(canal) {
       ubicacion,
       nombreCliente,
       canal,
+      descuentoPct,
+      esPrimerPedido,
     });
     btnEnviar.disabled    = false;
     btnEnviar.textContent = canal === 'whatsapp' ? 'WhatsApp' : 'Instagram';
