@@ -41,6 +41,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   aplicarEstadoDelivery();
 });
 
+
+// ── Estado visual del botón delivery ─────
+
+function aplicarEstadoDelivery() {
+  const btnD = document.getElementById('btn-delivery');
+  const msg  = document.getElementById('delivery-mensaje');
+  if (!btnD || !configApp) return;
+
+  const estado = deliveryDisponible(configApp);
+  if (!estado.ok) {
+    btnD.style.opacity       = '0.45';
+    btnD.style.cursor        = 'not-allowed';
+    btnD.style.pointerEvents = 'none';
+    if (msg) {
+      const mensajes = {
+        desactivado:     'Delivery no disponible por ahora.',
+        cerrado_hoy:     'Sin delivery hoy. ¡Podés pasar a buscarlo!',
+        fuera_horario:   `Delivery disponible de ${minAHora(estado.ini)} a ${minAHora(estado.fin)} hrs.`,
+        horario_invalido:'Delivery no disponible por ahora.',
+      };
+      msg.textContent   = mensajes[estado.motivo] || 'Delivery no disponible.';
+      msg.style.display = 'block';
+    }
+  } else {
+    btnD.style.opacity       = '';
+    btnD.style.cursor        = '';
+    btnD.style.pointerEvents = '';
+    if (msg) msg.style.display = 'none';
+  }
+}
+
 // ── Botón flotante ────────────────────────
 
 function actualizarBotonFlotante(resumen) {
