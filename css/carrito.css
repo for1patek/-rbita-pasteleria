@@ -222,6 +222,21 @@
 
 .delivery-tag.gratis { color: #2D6A4F; }
 
+/* Delivery no disponible */
+.modal-opcion-btn.no-disponible {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(1);
+}
+#delivery-mensaje {
+  font-size: .82rem;
+  color: #c0392b;
+  text-align: center;
+  padding: .3rem 0 .1rem;
+  min-height: 1.2em;
+}
+
 /* ── Sección ubicación ── */
 #seccion-ubicacion {
   margin-bottom: 16px;
