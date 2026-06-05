@@ -293,6 +293,12 @@ function iniciarAuth() {
 
   // Chip de sesión
   document.getElementById('chip-sesion')?.addEventListener('click', () => {
+    const sesion = obtenerSesion();
+    if (!sesion) {
+      const modal = document.getElementById('modal-auth');
+      if (modal) modal.style.display = 'flex';
+      return;
+    }
     const menu = document.getElementById('menu-sesion');
     if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
   });
@@ -323,14 +329,15 @@ function actualizarChipSesion() {
   const nombre = document.getElementById('chip-nombre');
   const sesion = obtenerSesion();
   if (!chip) return;
+  chip.style.display = 'block';
   if (sesion?.nombre) {
-    chip.style.display  = 'block';
-    nombre.textContent  = sesion.nombre.split(' ')[0];
+    nombre.textContent = sesion.nombre.split(' ')[0];
+    chip.title = 'Mi cuenta';
   } else if (sesion) {
-    chip.style.display  = 'block';
-    nombre.textContent  = 'Mi cuenta';
+    nombre.textContent = 'Mi cuenta';
   } else {
-    chip.style.display  = 'none';
+    nombre.textContent = 'Ingresar';
+    chip.title = 'Iniciar sesión o registrarse';
   }
 }
 
