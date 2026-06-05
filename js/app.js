@@ -133,20 +133,6 @@ function iniciarModal() {
   btnIg?.addEventListener('click',  () => enviar('instagram'));
 }
 
-function mostrarMensajeDelivery(estado, btnDelivery) {
-  const mensajes = {
-    desactivado:     'El delivery no está disponible por ahora.',
-    cerrado_hoy:     'No hay delivery hoy. ¡Puedes pasar a retirarlo!',
-    fuera_horario:   `Delivery disponible de ${minAHora(estado.ini)} a ${minAHora(estado.fin)} hrs.`,
-    horario_invalido:'El delivery no está disponible por ahora.',
-  };
-  const msg = document.getElementById('delivery-mensaje');
-  if (msg) {
-    msg.textContent = mensajes[estado.motivo] || 'Delivery no disponible.';
-    msg.style.display = 'block';
-    setTimeout(() => msg.style.display = 'none', 4000);
-  }
-}
 
 function cerrarModal() {
   document.getElementById('modal-pedido')?.classList.remove('visible');
