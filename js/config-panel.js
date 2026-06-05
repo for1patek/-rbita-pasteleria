@@ -13,15 +13,17 @@ const CLAVES_VALIDAS = [
   'delivery_hora_inicio',
   'delivery_hora_fin',
   'admin_password_hash',
+  'descuento_primer_pedido',
 ];
 
 // Defaults si Supabase no responde
 const DEFAULTS = {
-  delivery_activo:      'true',
-  delivery_cerrado_hoy: 'false',
-  delivery_costo:       '2000',
-  delivery_hora_inicio: '720',
-  delivery_hora_fin:    '1260',
+  delivery_activo:         'true',
+  delivery_cerrado_hoy:    'false',
+  delivery_costo:          '2000',
+  delivery_hora_inicio:    '720',
+  delivery_hora_fin:       '1260',
+  descuento_primer_pedido: '0',
 };
 
 function headers(extra = {}) {
