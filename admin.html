@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Órbita 300 · Admin</title>
+  <link rel="icon" type="image/png" href="https://i.ibb.co/nqkMR2b8/Logo-rbita-300-removebg-preview.png">
+  <style>
+    :root {
+      --bg:      #1a1a1a;
+      --card:    #242424;
+      --border:  #333;
+      --primary: #c8a97e;
+      --danger:  #e05555;
+      --success: #5aab6e;
+      --text:    #f0ece4;
+      --muted:   #888;
+      --font:    'Georgia', serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ── Login ── */
+    #pantalla-login {
+      width: 100%;
+      max-width: 360px;
+      margin: auto;
+      text-align: center;
+      padding-top: 20vh;
+    }
+    #pantalla-login h1 { font-size: 1.6rem; color: var(--primary); margin-bottom: .4rem; }
+    #pantalla-login p  { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; }
+    .login-input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .9rem 1rem;
+      color: var(--text);
+      font-size: 1rem;
+      text-align: center;
+      letter-spacing: .2em;
+      outline: none;
+      margin-bottom: 1rem;
+    }
+    .login-input:focus { border-color: var(--primary); }
+    .btn-login {
+      width: 100%;
+      background: var(--primary);
+      color: #1a1a1a;
+      border: none;
+      border-radius: 10px;
+      padding: .9rem;
+      font-size: 1rem;
+      font-family: var(--font);
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn-login:hover { opacity: .85; }
+    #login-error { color: var(--danger); font-size: .85rem; margin-top: .8rem; min-height: 1.2em; }
+
+    /* ── Panel ── */
+    #pantalla-panel { display: none; width: 100%; max-width: 480px; }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-header h1 { font-size: 1.3rem; color: var(--primary); }
+    .btn-logout {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: .4rem .9rem;
+      font-size: .8rem;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem;
+      margin-bottom: 1.2rem;
+    }
+    .card-title {
+      font-size: .75rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.1rem;
+    }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .5rem 0;
+    }
+    .toggle-label { font-size: .95rem; }
+    .toggle {
+      position: relative;
+      width: 48px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 26px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .toggle-slider:before {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+      left: 3px; top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform .2s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--success); }
+    .toggle input:checked + .toggle-slider:before { transform: translateX(22px); }
+
+    /* Horario */
+    .horario-row {
+      display: flex;
+      gap: .8rem;
+      align-items: center;
+      margin-top: .6rem;
+    }
+    .horario-row label { font-size: .85rem; color: var(--muted); min-width: 40px; }
+    .time-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .6rem .8rem;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: var(--font);
+      outline: none;
+    }
+    .time-input:focus { border-color: var(--primary); }
+
+    /* Costo */
+    .costo-row {
+      display: flex;
+      gap: .8rem;
+      align-items: center;
+    }
+    .costo-prefix {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    .costo-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .6rem .8rem;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: var(--font);
+      outline: none;
+    }
+    .costo-input:focus { border-color: var(--primary); }
+
+    /* Guardar */
+    .btn-guardar {
+      width: 100%;
+      background: var(--primary);
+      color: #1a1a1a;
+      border: none;
+      border-radius: 10px;
+      padding: .8rem;
+      font-size: .95rem;
+      font-family: var(--font);
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: opacity .2s;
+    }
+    .btn-guardar:hover { opacity: .85; }
+    .btn-guardar:disabled { opacity: .5; cursor: not-allowed; }
+    .feedback {
+      text-align: center;
+      font-size: .85rem;
+      min-height: 1.2em;
+      margin-top: .5rem;
+    }
+    .feedback.ok  { color: var(--success); }
+    .feedback.err { color: var(--danger); }
+
+    /* Pedidos */
+    .pedido-item {
+      border-bottom: 1px solid var(--border);
+      padding: .9rem 0;
+      font-size: .9rem;
+    }
+    .pedido-item:last-child { border-bottom: none; }
+    .pedido-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: .3rem;
+    }
+    .pedido-canal { color: var(--primary); font-size: .8rem; }
+    .pedido-total { font-weight: bold; }
+    .pedido-hora  { color: var(--muted); font-size: .78rem; }
+    .pedido-items { color: var(--muted); font-size: .82rem; margin-top: .2rem; }
+    .pedido-entrega { font-size: .82rem; margin-top: .2rem; }
+    .pedido-entrega.delivery { color: #7ec8e3; }
+    .pedido-entrega.retiro   { color: var(--muted); }
+    .sin-pedidos { color: var(--muted); font-size: .9rem; text-align: center; padding: 1rem 0; }
+
+    .loading { color: var(--muted); font-size: .85rem; text-align: center; padding: 1rem; }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<section id="pantalla-login">
+  <h1>Órbita 300</h1>
+  <p>Panel de administración</p>
+  <input type="password" class="login-input" id="input-password" placeholder="••••••••" autocomplete="current-password">
+  <button class="btn-login" id="btn-ingresar">Ingresar</button>
+  <div id="login-error"></div>
+</section>
+
+<!-- ── PANEL ── -->
+<section id="pantalla-panel">
+  <div class="panel-header">
+    <h1>Panel · Pastelería</h1>
+    <button class="btn-logout" id="btn-logout">Salir</button>
+  </div>
+
+  <!-- Delivery on/off -->
+  <div class="card">
+    <div class="card-title">Estado del delivery</div>
+    <div class="toggle-row">
+      <span class="toggle-label">Delivery activo</span>
+      <label class="toggle">
+        <input type="checkbox" id="toggle-activo">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="toggle-row" style="margin-top:.4rem">
+      <span class="toggle-label">Cerrado hoy</span>
+      <label class="toggle">
+        <input type="checkbox" id="toggle-cerrado">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <button class="btn-guardar" id="btn-guardar-estado">Guardar estado</button>
+    <div class="feedback" id="feedback-estado"></div>
+  </div>
+
+  <!-- Horario -->
+  <div class="card">
+    <div class="card-title">Horario de delivery</div>
+    <div class="horario-row">
+      <label>Desde</label>
+      <input type="time" class="time-input" id="hora-inicio">
+    </div>
+    <div class="horario-row" style="margin-top:.6rem">
+      <label>Hasta</label>
+      <input type="time" class="time-input" id="hora-fin">
+    </div>
+    <button class="btn-guardar" id="btn-guardar-horario">Guardar horario</button>
+    <div class="feedback" id="feedback-horario"></div>
+  </div>
+
+  <!-- Costo -->
+  <div class="card">
+    <div class="card-title">Costo de delivery</div>
+    <div class="costo-row">
+      <span class="costo-prefix">$</span>
+      <input type="number" class="costo-input" id="input-costo" min="0" step="100">
+    </div>
+    <button class="btn-guardar" id="btn-guardar-costo">Guardar costo</button>
+    <div class="feedback" id="feedback-costo"></div>
+  </div>
+
+  <!-- Pedidos del día -->
+  <div class="card">
+    <div class="card-title">Pedidos de hoy</div>
+    <div id="lista-pedidos"><div class="loading">Cargando...</div></div>
+  </div>
+</section>
+
+<script type="module">
+  import { leerConfig, escribirConfig, verificarPassword, horaAMin, minAHora } from './js/config-panel.js';
+  import { SUPABASE_URL, SUPABASE_KEY } from './js/config.js';
+
+  const SESSION_KEY = 'o300_admin_ok';
+
+  // ── Helpers ──────────────────────────────
+  function minToTimeInput(min) {
+    const h  = String(Math.floor(min / 60)).padStart(2, '0');
+    const mm = String(min % 60).padStart(2, '0');
+    return `${h}:${mm}`;
+  }
+
+  function feedback(id, msg, tipo) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.className   = `feedback ${tipo}`;
+    setTimeout(() => { el.textContent = ''; el.className = 'feedback'; }, 3000);
+  }
+
+  // ── Login ─────────────────────────────────
+  const pantLogin  = document.getElementById('pantalla-login');
+  const pantPanel  = document.getElementById('pantalla-panel');
+  const inputPass  = document.getElementById('input-password');
+  const btnIngresar = document.getElementById('btn-ingresar');
+  const loginError = document.getElementById('login-error');
+
+  async function intentarLogin() {
+    const pass = inputPass.value.trim();
+    if (!pass) return;
+    btnIngresar.disabled   = true;
+    btnIngresar.textContent = 'Verificando...';
+    const config = await leerConfig();
+    const ok     = await verificarPassword(pass, config.admin_password_hash);
+    if (ok) {
+      sessionStorage.setItem(SESSION_KEY, '1');
+      mostrarPanel(config);
+    } else {
+      loginError.textContent  = 'Contraseña incorrecta';
+      btnIngresar.disabled    = false;
+      btnIngresar.textContent = 'Ingresar';
+      inputPass.value = '';
+      inputPass.focus();
+    }
+  }
+
+  btnIngresar.addEventListener('click', intentarLogin);
+  inputPass.addEventListener('keydown', e => { if (e.key === 'Enter') intentarLogin(); });
+
+  // Auto-login si hay sesión activa
+  if (sessionStorage.getItem(SESSION_KEY)) {
+    leerConfig().then(mostrarPanel);
+  }
+
+  // ── Panel ─────────────────────────────────
+  function mostrarPanel(config) {
+    pantLogin.style.display = 'none';
+    pantPanel.style.display = 'block';
+
+    document.getElementById('toggle-activo').checked  = config.delivery_activo      === 'true';
+    document.getElementById('toggle-cerrado').checked = config.delivery_cerrado_hoy  === 'true';
+    document.getElementById('hora-inicio').value      = minToTimeInput(parseInt(config.delivery_hora_inicio));
+    document.getElementById('hora-fin').value         = minToTimeInput(parseInt(config.delivery_hora_fin));
+    document.getElementById('input-costo').value      = config.delivery_costo;
+
+    cargarPedidos();
+  }
+
+  // Logout
+  document.getElementById('btn-logout').addEventListener('click', () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    pantPanel.style.display = 'none';
+    pantLogin.style.display = 'block';
+    inputPass.value = '';
+  });
+
+  // Guardar estado
+  document.getElementById('btn-guardar-estado').addEventListener('click', async () => {
+    const btn    = document.getElementById('btn-guardar-estado');
+    btn.disabled = true;
+    const activo  = document.getElementById('toggle-activo').checked  ? 'true' : 'false';
+    const cerrado = document.getElementById('toggle-cerrado').checked ? 'true' : 'false';
+    const [r1, r2] = await Promise.all([
+      escribirConfig('delivery_activo',      activo),
+      escribirConfig('delivery_cerrado_hoy', cerrado),
+    ]);
+    btn.disabled = false;
+    if (r1.ok && r2.ok) feedback('feedback-estado', '✓ Guardado', 'ok');
+    else feedback('feedback-estado', 'Error al guardar', 'err');
+  });
+
+  // Guardar horario
+  document.getElementById('btn-guardar-horario').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-guardar-horario');
+    btn.disabled = true;
+    const ini = horaAMin(document.getElementById('hora-inicio').value);
+    const fin = horaAMin(document.getElementById('hora-fin').value);
+    if (ini === null || fin === null || ini >= fin) {
+      feedback('feedback-horario', 'Horario inválido', 'err');
+      btn.disabled = false;
+      return;
+    }
+    const [r1, r2] = await Promise.all([
+      escribirConfig('delivery_hora_inicio', String(ini)),
+      escribirConfig('delivery_hora_fin',    String(fin)),
+    ]);
+    btn.disabled = false;
+    if (r1.ok && r2.ok) feedback('feedback-horario', '✓ Guardado', 'ok');
+    else feedback('feedback-horario', 'Error al guardar', 'err');
+  });
+
+  // Guardar costo
+  document.getElementById('btn-guardar-costo').addEventListener('click', async () => {
+    const btn  = document.getElementById('btn-guardar-costo');
+    btn.disabled = true;
+    const costo = parseInt(document.getElementById('input-costo').value) || 0;
+    const r = await escribirConfig('delivery_costo', String(costo));
+    btn.disabled = false;
+    if (r.ok) feedback('feedback-costo', '✓ Guardado', 'ok');
+    else feedback('feedback-costo', 'Error al guardar', 'err');
+  });
+
+  // ── Pedidos del día ───────────────────────
+  async function cargarPedidos() {
+    const lista = document.getElementById('lista-pedidos');
+    try {
+      const hoy   = new Date().toISOString().slice(0, 10);
+      const url   = `${SUPABASE_URL}/rest/v1/pedidos?created_at=gte.${hoy}T00:00:00&order=created_at.desc`;
+      const res   = await fetch(url, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      const pedidos = await res.json();
+
+      if (!pedidos.length) {
+        lista.innerHTML = '<div class="sin-pedidos">Sin pedidos hoy</div>';
+        return;
+      }
+
+      lista.innerHTML = '';
+      for (const p of pedidos) {
+        const hora   = new Date(p.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+        const items  = Array.isArray(p.items)
+          ? p.items.map(i => `${i.nombre}${i.variante ? ` (${i.variante})` : ''} x${i.cantidad}`).join(', ')
+          : '';
+        const entrega = p.delivery
+          ? `🚚 Delivery${p.ubicacion_texto ? ' · ' + p.ubicacion_texto : ''}`
+          : '🏪 Retiro en local';
+
+        const div = document.createElement('div');
+        div.className = 'pedido-item';
+        div.innerHTML = `
+          <div class="pedido-meta">
+            <span class="pedido-canal">${p.canal === 'whatsapp' ? '💬 WhatsApp' : '📸 Instagram'}</span>
+            <span class="pedido-total">$${(p.total || 0).toLocaleString('es-CL')}</span>
+          </div>
+          <div class="pedido-hora">${hora}${p.nombre_cliente ? ' · ' + p.nombre_cliente : ''}</div>
+          <div class="pedido-items">${items}</div>
+          <div class="pedido-entrega ${p.delivery ? 'delivery' : 'retiro'}">${entrega}</div>
+        `;
+        lista.appendChild(div);
+      }
+    } catch {
+      lista.innerHTML = '<div class="sin-pedidos">No se pudieron cargar los pedidos</div>';
+    }
+  }
+</script>
+</body>
+</html>
