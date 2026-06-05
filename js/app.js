@@ -125,7 +125,8 @@ function iniciarModal() {
       btnGPS.textContent = '📍 Ubicación obtenida ✓';
       inputDir.style.display = 'none';
     } catch (e) {
-      btnGPS.textContent = 'No se pudo obtener ubicación';
+      btnGPS.textContent = '📍 Intentar de nuevo';
+      btnGPS.disabled = false;
       inputDir.style.display = 'block';
     } finally {
       btnGPS.disabled = false;
@@ -269,6 +270,8 @@ async function enviar(canal) {
       canal,
     });
 
+    btnEnviar.disabled = false;
+    btnEnviar.textContent = canal === 'whatsapp' ? 'WhatsApp' : 'Instagram';
     vaciar();
     cerrarModal();
   } catch (e) {
