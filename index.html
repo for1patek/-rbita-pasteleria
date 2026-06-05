@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Órbita 300 · Frutillar</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/nqkMR2b8/Logo-rbita-300-removebg-preview.png">
+<link rel="apple-touch-icon" href="https://i.ibb.co/nqkMR2b8/Logo-rbita-300-removebg-preview.png">
+<meta property="og:title" content="Órbita 300 · Frutillar">
+<meta property="og:description" content="Cafés, pastelería casera, sándwiches y más. Frutillar.">
+<meta property="og:image" content="https://i.ibb.co/nqkMR2b8/Logo-rbita-300-removebg-preview.png">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #08080a;
+    --card:   #121216;
+    --border: #2a2a32;
+    --muted:  #8a8a98;
+    --text:   #f0f0f5;
+    --cafe:   #8B1A1A;
+    --fuente: #D4872A;
+    --life:   #2D6A4F;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(32px, 8vw, 52px) clamp(16px, 5vw, 24px) clamp(40px, 10vw, 56px);
+  }
+  .wrap { width: 100%; max-width: 480px; }
+
+  .logo { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 9vw, 3.2rem); letter-spacing: 4px; text-align: center; color: var(--text); line-height: 1; font-variant-numeric: lining-nums; }
+  .logo-sub { font-size: clamp(0.62rem, 2vw, 0.75rem); letter-spacing: 5px; text-transform: uppercase; color: var(--muted); text-align: center; margin-top: 10px; }
+  .divider { width: 40px; height: 1px; background: #3a3a44; margin: 22px auto 28px; }
+
+  .grid { display: flex; flex-direction: column; gap: 14px; }
+  a.card {
+    display: flex; align-items: center; gap: 18px;
+    text-decoration: none; color: inherit;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: clamp(14px, 4vw, 20px);
+    transition: transform 0.2s;
+  }
+  a.card:hover { transform: translateY(-2px); }
+  a.card:active { transform: scale(0.98); }
+  a.card.cafe   { border-left: 4px solid var(--cafe); }
+  a.card.fuente { border-left: 4px solid var(--fuente); }
+  a.card.life   { border-left: 4px solid var(--life); }
+  .card-emoji { font-size: clamp(1.6rem, 5vw, 2rem); width: 44px; text-align: center; flex-shrink: 0; }
+  .card-body { flex: 1; }
+  .card-body strong { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.1rem, 4vw, 1.35rem); letter-spacing: 3px; display: block; }
+  a.card.cafe   .card-body strong { color: #e8b4b4; }
+  a.card.fuente .card-body strong { color: var(--fuente); }
+  a.card.life   .card-body strong { color: #52B788; }
+  .card-body span { font-size: clamp(0.72rem, 2.5vw, 0.8rem); color: var(--muted); margin-top: 3px; display: block; }
+  .card-arrow { font-size: 1rem; color: var(--border); flex-shrink: 0; }
+
+  /* CARRUSEL */
+  .slider-wrap { position: relative; width: 100%; border-radius: 16px; overflow: hidden; margin-top: 28px; aspect-ratio: 4/3; }
+  .slider-track { display: flex; height: 100%; transition: transform 0.5s ease; }
+  .slide {
+    min-width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    color: #3a3a44;
+  }
+  .slide:nth-child(1) { background: #1a1a20; }
+  .slide:nth-child(2) { background: #1a1510; }
+  .slide:nth-child(3) { background: #10181a; }
+  .slide-icon { font-size: 2rem; opacity: 0.25; }
+  .slide-label { opacity: 0.35; }
+.slider-btn:hover { background: rgba(0,0,0,0.8); }
+.slider-btn.next { right: 10px; }
+  .slider-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #3a3a44; cursor: pointer; transition: background 0.2s; }
+  .dot.active { background: var(--muted); }
+
+  /* FOOTER */
+  .footer { margin-top: 36px; text-align: center; }
+  .footer-hr { font-family: 'Bebas Neue', sans-serif; font-size: 0.9rem; letter-spacing: 2px; color: #4a4a56; margin-bottom: 8px; }
+  .location-label { font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  a.location-link {
+    display: inline-flex; align-items: center; gap: 5px;
+    color: var(--muted); text-decoration: none;
+    font-size: clamp(0.72rem, 2.5vw, 0.8rem);
+    transition: color 0.2s;
+  }
+  a.location-link:hover { color: var(--text); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="logo">Órbita 300</div>
+    <div class="logo-sub">Frutillar</div>
+    <div class="divider"></div>
+
+    <div class="grid">
+      <a class="card cafe" href="cafe.html">
+        <span class="card-emoji">☕</span>
+        <div class="card-body">
+          <strong>Órbita Café</strong>
+          <span>Cafés, pastelería casera y jugos</span>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+      <a class="card fuente" href="fuente.html">
+        <span class="card-emoji">🍔</span>
+        <div class="card-body">
+          <strong>Órbita Fuente</strong>
+          <span>Sándwiches, completos, papas y más</span>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+      <a class="card life" href="life.html">
+        <span class="card-emoji">🌿</span>
+        <div class="card-body">
+          <strong>Órbita Life</strong>
+          <span>Batidos proteícos y de entrenamiento</span>
+        </div>
+        <span class="card-arrow">›</span>
+      </a>
+    </div>
+
+    <div class="slider-wrap">
+      <div class="slider-track" id="track">
+        <div class="slide" style="background-image:url('https://i.ibb.co/kfxTfN8/Muffins-1.jpg');background-size:cover;background-position:center"></div>
+        <div class="slide" style="position:relative;overflow:hidden">
+          <div style="position:absolute;inset:0;background-image:url('https://i.ibb.co/35pSrNvw/fajita-1.jpg');background-size:cover;background-position:center;filter:blur(14px) brightness(0.5);transform:scale(1.1)"></div>
+          <div style="position:absolute;inset:0;background-image:url('https://i.ibb.co/35pSrNvw/fajita-1.jpg');background-size:contain;background-position:center;background-repeat:no-repeat"></div>
+        </div>
+        <div class="slide" style="background-image:url('https://i.ibb.co/d4GJzmst/pie-de-limon-1.jpg');background-size:cover;background-position:center"></div>
+        <div class="slide" style="position:relative;overflow:hidden">
+          <div style="position:absolute;inset:0;background-image:url('https://i.ibb.co/213THgFy/Completo-1.jpg');background-size:cover;background-position:center;filter:blur(14px) brightness(0.5);transform:scale(1.1)"></div>
+          <div style="position:absolute;inset:0;background-image:url('https://i.ibb.co/213THgFy/Completo-1.jpg');background-size:contain;background-position:center;background-repeat:no-repeat"></div>
+        </div>
+        <div class="slide" style="background-image:url('https://i.ibb.co/BVPxChLW/pie-y-brownie-1.jpg');background-size:cover;background-position:center"></div>
+        <div class="slide" style="position:relative;overflow:hidden">
+          <div style="position:absolute;inset:0;background-image:url('https://i.ibb.co/S7M9kp1x/Completo-2.jpg');background-size:cover;background-position:center;filter:blur(14px) brightness(0.5);transform:scale(1.1)"></div>
+          <div style="position:absolute;inset:0;background-image:url('https://i.ibb.co/S7M9kp1x/Completo-2.jpg');background-size:contain;background-position:center;background-repeat:no-repeat"></div>
+        </div>
+        <div class="slide" style="background-image:url('https://i.ibb.co/BKjvf1L0/brownie-y-caf-1.jpg');background-size:cover;background-position:center"></div>
+        <div class="slide" style="position:relative;overflow:hidden">
+          <div style="position:absolute;inset:0;background-image:url('https://i.ibb.co/v63HqGh6/Galletas-1.jpg');background-size:cover;background-position:center;filter:blur(14px) brightness(0.5);transform:scale(1.1)"></div>
+          <div style="position:absolute;inset:0;background-image:url('https://i.ibb.co/v63HqGh6/Galletas-1.jpg');background-size:contain;background-position:center;background-repeat:no-repeat"></div>
+        </div>
+        <div class="slide" style="background-image:url('https://i.ibb.co/F4FVLv8j/pie-de-lim-n-y-caf-1.jpg');background-size:cover;background-position:center"></div>
+      </div>
+    </div>
+    <div class="slider-dots" id="dots">
+      <div class="dot active" onclick="irA(0)"></div>
+      <div class="dot" onclick="irA(1)"></div>
+      <div class="dot" onclick="irA(2)"></div>
+      <div class="dot" onclick="irA(3)"></div>
+      <div class="dot" onclick="irA(4)"></div>
+      <div class="dot" onclick="irA(5)"></div>
+      <div class="dot" onclick="irA(6)"></div>
+      <div class="dot" onclick="irA(7)"></div>
+      <div class="dot" onclick="irA(8)"></div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-hr">8:30 — 19:00 hrs</div>
+      <div class="location-label">¿Dónde nos ubicamos?</div>
+      <a class="location-link" href="https://maps.app.goo.gl/RQJpEevGV9xaCPWX9" target="_blank">
+        📍 Toca aquí para ubicarnos
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+  let actual = 0;
+  const total = 9;
+  const track = document.getElementById('track');
+  const dots = document.querySelectorAll('.dot');
+
+  function irA(n) {
+    actual = (n + total) % total;
+    track.style.transform = `translateX(-${actual * 100}%)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === actual));
+  }
+
+  let timer = setInterval(() => mover(1), 4000);
+
+  function mover(dir) {
+    clearInterval(timer);
+    irA(actual + dir);
+    timer = setInterval(() => mover(1), 4000);
+  }
+
+  // Swipe táctil
+  let startX = 0;
+  track.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+  }, { passive: true });
+
+  track.addEventListener('touchend', e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) mover(diff > 0 ? 1 : -1);
+  }, { passive: true });
+</script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Órbita 300 · Life · Carta</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/nqkMR2b8/Logo-rbita-300-removebg-preview.png">
+<link rel="apple-touch-icon" href="https://i.ibb.co/nqkMR2b8/Logo-rbita-300-removebg-preview.png">
+<meta property="og:title" content="Órbita 300 · Life · Carta">
+<meta property="og:description" content="Batidos proteícos y de entrenamiento en Frutillar.">
+<meta property="og:image" content="https://i.ibb.co/nqkMR2b8/Logo-rbita-300-removebg-preview.png">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #2D6A4F;
+    --accent:  #52B788;
+    --bg:      #F5F9F2;
+    --card:    #E8F5E0;
+    --border:  #C8E6C9;
+    --text:    #1A3A2A;
+    --muted:   #52B788;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+  .hero { border-bottom: 3px solid var(--primary); padding: clamp(32px, 8vw, 48px) 24px clamp(24px, 6vw, 36px); text-align: center; }
+  .logo { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 8vw, 2.8rem); letter-spacing: 3px; color: var(--primary); line-height: 1; font-variant-numeric: lining-nums; }
+  .logo-line { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.1rem, 4vw, 1.5rem); font-style: italic; font-weight: 500; letter-spacing: 5px; color: var(--muted); margin-left: 10px; vertical-align: middle; }
+  .logo-sub { font-size: clamp(0.65rem, 2vw, 0.78rem); letter-spacing: 5px; text-transform: uppercase; color: var(--muted); margin-top: 8px; }
+  .dline { width: 48px; height: 1px; background: var(--primary); opacity: 0.4; margin: 18px auto 0; }
+
+  .menu-wrap { max-width: 480px; margin: 0 auto; padding: clamp(20px, 5vw, 28px) clamp(18px, 5vw, 28px) 40px; }
+
+  .cat-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(0.85rem, 3vw, 1rem);
+    letter-spacing: 4px;
+    color: var(--primary);
+    border-left: 3px solid var(--accent);
+    border-radius: 0;
+    padding-left: 10px;
+    margin: 24px 0 10px;
+  }
+  .cat-label:first-child { margin-top: 0; }
+
+  .item { display: flex; align-items: center; padding: clamp(10px, 3vw, 14px) 0; border-bottom: 0.5px solid var(--border); font-size: clamp(0.88rem, 3vw, 1rem); font-weight: 600; color: var(--text); }
+  .item:last-child { border-bottom: none; }
+  .item::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 12px; flex-shrink: 0; }
+
+  .slider-wrap { position: relative; width: 100%; max-width: 480px; margin: 0 auto; overflow: hidden; aspect-ratio: 4/3; }
+  .slider-track { display: flex; height: 100%; transition: transform 0.5s ease; }
+  .slide { min-width: 100%; height: 100%; background-size: cover; background-position: center; }
+  .slide-placeholder { min-width: 100%; height: 100%; background: var(--card); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .slide-placeholder-icon { font-size: 2.5rem; opacity: 0.3; }
+  .slide-placeholder-text { font-family: 'Bebas Neue', sans-serif; font-size: 0.8rem; letter-spacing: 3px; color: var(--primary); opacity: 0.4; }
+  .slider-dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0; background: var(--bg); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); cursor: pointer; transition: background 0.2s; }
+  .dot.active { background: var(--primary); }
+
+  .footer { text-align: center; padding: 20px 24px 44px; border-top: 1px solid var(--border); max-width: 480px; margin: 0 auto; }
+  .footer-gold { color: var(--primary); font-size: 1rem; opacity: 0.4; margin-bottom: 10px; }
+  .location-label { font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
+  .location-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: white; border: 1px solid var(--border);
+    border-radius: 20px; padding: 8px 16px;
+    font-size: 0.78rem; color: var(--muted);
+    text-decoration: none; transition: border-color 0.2s, color 0.2s;
+  }
+  .location-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .footer-hr { font-family: 'Bebas Neue', sans-serif; font-size: 0.95rem; letter-spacing: 2px; color: var(--primary); margin-top: 12px; }
+
+  .btn-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem; letter-spacing: 3px;
+    color: var(--primary); text-decoration: none;
+    padding: 10px 0 0 24px;
+    opacity: 0.7; transition: opacity 0.2s;
+  }
+  .btn-back:hover { opacity: 1; }
+</style>
+</head>
+<body>
+
+<a class="btn-back" href="index.html">‹ Volver</a>
+<div class="hero">
+  <div class="logo">Órbita 300<span class="logo-line">Life</span></div>
+  <div class="logo-sub">Frutillar</div>
+  <div class="dline"></div>
+</div>
+
+<div class="menu-wrap">
+
+  <div class="cat-label">Batidos Proteícos</div>
+  <!-- PRODUCTOS PENDIENTES -->
+
+  <div class="cat-label">Batidos Pre Entreno</div>
+  <!-- PRODUCTOS PENDIENTES -->
+
+  <div class="cat-label">Batidos Post Entreno</div>
+  <!-- PRODUCTOS PENDIENTES -->
+
+</div>
+
+<div class="slider-wrap">
+  <div class="slider-track" id="track">
+    <div class="slide-placeholder">
+      <div class="slide-placeholder-icon">🥤</div>
+      <div class="slide-placeholder-text">Fotos próximamente</div>
+    </div>
+  </div>
+</div>
+<div class="slider-dots" id="dots">
+  <div class="dot active" onclick="irA(0)"></div>
+</div>
+
+<div class="footer">
+  <div class="footer-gold">✦</div>
+  <div class="location-label">¿Dónde nos ubicamos?</div>
+  <a class="location-btn" href="https://maps.app.goo.gl/RQJpEevGV9xaCPWX9" target="_blank">
+    📍 Toca aquí para ubicarnos
+  </a>
+  <div class="footer-hr">8:30 — 19:00 hrs</div>
+</div>
+
+<script>
+  let actual = 0;
+  const total = 1;
+  const track = document.getElementById('track');
+  const dots = document.querySelectorAll('.dot');
+
+  function irA(n) {
+    actual = (n + total) % total;
+    track.style.transform = `translateX(-${actual * 100}%)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === actual));
+  }
+
+  let timer = setInterval(() => mover(1), 4000);
+
+  function mover(dir) {
+    clearInterval(timer);
+    irA(actual + dir);
+    timer = setInterval(() => mover(1), 4000);
+  }
+
+  let startX = 0;
+  track.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+  }, { passive: true });
+
+  track.addEventListener('touchend', e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) mover(diff > 0 ? 1 : -1);
+  }, { passive: true });
+</script>
+</body>
+</html>
