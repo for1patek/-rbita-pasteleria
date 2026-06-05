@@ -96,7 +96,6 @@ function iniciarModal() {
   const chkGuardar       = document.getElementById('chk-guardar');
   const inputNombre      = document.getElementById('input-nombre');
   const btnWsp           = document.getElementById('btn-enviar-wsp');
-  const btnIg            = document.getElementById('btn-enviar-ig');
 
   btn?.addEventListener('click', () => {
     if (estaVacio()) return;
@@ -161,7 +160,6 @@ function iniciarModal() {
   });
 
   btnWsp?.addEventListener('click', () => enviar('whatsapp'));
-  btnIg?.addEventListener('click',  () => enviar('instagram'));
 }
 
 
