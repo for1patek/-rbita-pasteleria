@@ -89,10 +89,7 @@ function iniciarModal() {
   // Delivery — verificar disponibilidad
   btnDelivery?.addEventListener('click', () => {
     const estado = deliveryDisponible(configApp || {});
-    if (!estado.ok) {
-      mostrarMensajeDelivery(estado, btnDelivery);
-      return;
-    }
+    if (!estado.ok) return; // bloqueado por no-disponible
     conDelivery = true;
     btnDelivery.classList.add('activo');
     btnRetiro.classList.remove('activo');
