@@ -58,7 +58,7 @@
   <!-- ── Footer ── -->
   <footer class="footer">
     <div class="footer-gold">✦</div>
-    <div class="footer-label">Pedidos e información</div>
+    <div class="footer-label">Contacto</div>
     <div class="contact-btns">
 
       <!-- WhatsApp -->
@@ -119,16 +119,24 @@
       <!-- Lista de items -->
       <div id="modal-lista-items"></div>
 
+      <!-- Banner descuento primer pedido -->
+      <div id="banner-descuento" style="display:none; background:#fff5e6; border:1px solid #f0c070; border-radius:8px; padding:10px 14px; font-size:0.85rem; color:#7a4800; text-align:center; margin-bottom:4px;"></div>
+
       <!-- Totales -->
       <div class="modal-totales">
         <div class="modal-fila">
           <span>Subtotal</span>
           <span id="modal-subtotal">$0</span>
         </div>
+        <div class="modal-fila" id="modal-descuento-row" style="display:none">
+          <span style="color:#2D6A4F; font-weight:600;">Descuento 🎉</span>
+          <span id="modal-descuento-monto" style="color:#2D6A4F; font-weight:600;"></span>
+        </div>
         <div class="modal-fila" id="modal-delivery-row" style="display:none">
           <span>Delivery</span>
           <span id="modal-delivery"></span>
         </div>
+        <div id="modal-delivery-nota" style="display:none; font-size:0.75rem; color:#7A6040; font-style:italic; text-align:right; margin-top:-6px; margin-bottom:4px;"></div>
         <div class="modal-fila total">
           <span>Total</span>
           <span id="modal-total">$0</span>
