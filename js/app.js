@@ -112,8 +112,10 @@ function iniciarModal() {
     if (sesion?.telefono && descuentoPct > 0) {
       try {
         const { SUPABASE_URL, SUPABASE_KEY } = await import('./config.js');
+        // Usar el device_id de la sesión, no el del dispositivo actual
+        const idAConsultar = sesion.device_id || deviceId;
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/pedidos?device_id=eq.${encodeURIComponent(deviceId)}&select=id&limit=1`,
+          `${SUPABASE_URL}/rest/v1/pedidos?device_id=eq.${encodeURIComponent(idAConsultar)}&select=id&limit=1`,
           { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
         );
         const prev = await res.json().catch(() => [null]);
@@ -333,7 +335,7 @@ async function enviar(canal) {
 
   try {
     await enviarPedido({
-      deviceId,
+      deviceId: obtenerSesion()?.device_id || deviceId,
       items:       resumen.items,
       productosDB: (await import('./productos.js')).productosDB,
       conDelivery,
