@@ -7,6 +7,35 @@ import { STORAGE_KEYS } from './config.js';
 import { actualizarCliente } from './db.js';
 import { sanitizar } from './seguridad.js';
 
+// ── Reverse geocoding (Nominatim / OpenStreetMap) ─
+// Convierte coords en dirección legible: "Av. Hola 222, Frutillar"
+// Gratuito, sin API key, sin registro
+
+export async function coordsADireccion(lat, lng) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`;
+    const res = await fetch(url, {
+      headers: { 'Accept-Language': 'es', 'User-Agent': 'Orbita300Pasteleria/1.0' }
+    });
+    if (!res.ok) throw new Error('nominatim_error');
+    const data = await res.json();
+    const a = data.address || {};
+
+    // Armar dirección en formato chileno: "Calle Número, Ciudad"
+    const calle  = a.road || a.pedestrian || a.footway || '';
+    const numero = a.house_number || '';
+    const ciudad = a.city || a.town || a.village || a.municipality || '';
+
+    let direccion = calle;
+    if (numero) direccion += ` ${numero}`;
+    if (ciudad) direccion += `, ${ciudad}`;
+
+    return direccion.trim() || data.display_name?.split(',').slice(0, 2).join(',').trim() || '';
+  } catch {
+    return '';
+  }
+}
+
 // ── Guardar ubicación en localStorage y BD ─
 
 export async function guardarUbicacion(deviceId, datos) {
@@ -17,13 +46,10 @@ export async function guardarUbicacion(deviceId, datos) {
     ubicacion_lng:   datos.lng   ?? null,
   };
 
-  // Guardar local (para próximas visitas sin consultar BD)
   localStorage.setItem(STORAGE_KEYS.ubicacion, JSON.stringify(limpio));
 
-  // Guardar en BD si hay deviceId
   if (deviceId) {
     await actualizarCliente(deviceId, limpio).catch(() => {
-      // Si falla la BD, igual queda guardado en local
       console.warn('No se pudo guardar ubicación en BD');
     });
   }
@@ -56,28 +82,19 @@ export function pedirGPS() {
     }
 
     navigator.geolocation.getCurrentPosition(
-      pos => {
-        resolve({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        });
-      },
+      pos => resolve({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      }),
       err => {
-        switch (err.code) {
-          case err.PERMISSION_DENIED:
-            reject(new Error('Permiso de ubicación denegado'));
-            break;
-          case err.POSITION_UNAVAILABLE:
-            reject(new Error('Ubicación no disponible'));
-            break;
-          case err.TIMEOUT:
-            reject(new Error('Tiempo de espera agotado'));
-            break;
-          default:
-            reject(new Error('Error al obtener ubicación'));
-        }
+        const mensajes = {
+          [err.PERMISSION_DENIED]:    'Permiso de ubicación denegado',
+          [err.POSITION_UNAVAILABLE]: 'Ubicación no disponible',
+          [err.TIMEOUT]:              'Tiempo de espera agotado',
+        };
+        reject(new Error(mensajes[err.code] || 'Error al obtener ubicación'));
       },
-      { timeout: 10000, maximumAge: 60000 }
+      { timeout: 10000, maximumAge: 60000, enableHighAccuracy: true }
     );
   });
 }
