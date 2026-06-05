@@ -80,6 +80,11 @@ export function deliveryEsGratis() {
 
 // ── Resumen completo ──────────────────────
 
+export function calcularDescuento(subtotal, porcentaje) {
+  if (!porcentaje || porcentaje <= 0) return 0;
+  return Math.round(subtotal * porcentaje / 100);
+}
+
 export function obtenerResumen() {
   return {
     items:     _items.map(i => ({ ...i, clave: _clave(i) })),
