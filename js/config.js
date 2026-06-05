@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────
 
 export const SUPABASE_URL = 'https://ycflfqayxjfbgzzlqofy.supabase.co';
-export const SUPABASE_KEY = 'sb_publishable_3K-t_LugyQv_SaDbxBMaFA_0d27D_ug';
+export const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljZmxmcWF5eGpmYmd6emxxb2Z5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1Mjk3MDIsImV4cCI6MjA5NjEwNTcwMn0.l-el2tgwharAn1-o6WHhMbLKYwffbK_lif-vZbnk__A';
 
 // Reglas de delivery
 export const DELIVERY = {
