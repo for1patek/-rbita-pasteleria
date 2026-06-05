@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   iniciarSlider({ trackId: 'track', dotsId: 'dots' });
   alCambiar(actualizarBotonFlotante);
   iniciarModal();
+  aplicarEstadoDelivery();
 });
 
 // ── Botón flotante ────────────────────────
