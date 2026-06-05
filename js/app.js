@@ -11,6 +11,7 @@ import { obtenerUbicacionGuardada, guardarUbicacion, pedirGPS, limpiarUbicacionG
 import { enviarPedido }            from './pedido.js';
 import { DELIVERY }                from './config.js';
 import { leerConfig, deliveryDisponible, minAHora } from './config-panel.js';
+import { obtenerSesion, cerrarSesion, registrar, login, estaLogueado } from './auth.js';
 
 // ── Estado global ─────────────────────────
 let deviceId    = null;
@@ -39,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   alCambiar(actualizarBotonFlotante);
   iniciarModal();
   aplicarEstadoDelivery();
+  iniciarAuth();
 });
 
 
@@ -274,9 +276,202 @@ async function enviar(canal) {
     btnEnviar.textContent = canal === 'whatsapp' ? 'WhatsApp' : 'Instagram';
     vaciar();
     cerrarModal();
+    mostrarPromptRegistro();
   } catch (e) {
     alert(`Error al enviar pedido: ${e.message}`);
     btnEnviar.disabled    = false;
     btnEnviar.textContent = canal === 'whatsapp' ? 'WhatsApp' : 'Instagram';
+  }
+}
+
+// ── Auth ──────────────────────────────────
+
+function iniciarAuth() {
+  actualizarChipSesion();
+  iniciarModalAuth();
+  iniciarHistorial();
+
+  // Chip de sesión
+  document.getElementById('chip-sesion')?.addEventListener('click', () => {
+    const menu = document.getElementById('menu-sesion');
+    if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  });
+
+  document.getElementById('btn-cerrar-sesion')?.addEventListener('click', () => {
+    cerrarSesion();
+    actualizarChipSesion();
+    document.getElementById('menu-sesion').style.display = 'none';
+  });
+
+  document.getElementById('btn-ver-historial')?.addEventListener('click', () => {
+    document.getElementById('menu-sesion').style.display = 'none';
+    abrirHistorial();
+  });
+
+  // Cerrar menu al clickear fuera
+  document.addEventListener('click', e => {
+    const chip = document.getElementById('chip-sesion');
+    const menu = document.getElementById('menu-sesion');
+    if (menu && chip && !chip.contains(e.target) && !menu.contains(e.target)) {
+      menu.style.display = 'none';
+    }
+  });
+}
+
+function actualizarChipSesion() {
+  const chip   = document.getElementById('chip-sesion');
+  const nombre = document.getElementById('chip-nombre');
+  const sesion = obtenerSesion();
+  if (!chip) return;
+  if (sesion?.nombre) {
+    chip.style.display  = 'block';
+    nombre.textContent  = sesion.nombre.split(' ')[0];
+  } else if (sesion) {
+    chip.style.display  = 'block';
+    nombre.textContent  = 'Mi cuenta';
+  } else {
+    chip.style.display  = 'none';
+  }
+}
+
+function iniciarModalAuth() {
+  const modal    = document.getElementById('modal-auth');
+  const cerrarBtn = document.getElementById('auth-cerrar');
+  const tabs     = document.querySelectorAll('.auth-tab');
+  const errorEl  = document.getElementById('auth-error');
+  const exitoEl  = document.getElementById('auth-exito');
+
+  cerrarBtn?.addEventListener('click', () => modal.style.display = 'none');
+  modal?.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+
+  // Tabs
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => {
+        t.classList.remove('activo');
+        t.style.background = '#f0ebe0';
+        t.style.color      = '#555';
+      });
+      tab.classList.add('activo');
+      tab.style.background = '#8B1A2F';
+      tab.style.color      = '#fff';
+      document.getElementById('tab-registro').style.display = tab.dataset.tab === 'registro' ? 'block' : 'none';
+      document.getElementById('tab-login').style.display    = tab.dataset.tab === 'login'    ? 'block' : 'none';
+      errorEl.textContent = '';
+      exitoEl.textContent = '';
+    });
+  });
+
+  // Registro
+  document.getElementById('btn-registrar')?.addEventListener('click', async () => {
+    const btn    = document.getElementById('btn-registrar');
+    const nombre = document.getElementById('auth-nombre').value.trim();
+    const tel    = document.getElementById('auth-telefono-reg').value.trim();
+    const pin    = document.getElementById('auth-pin-reg').value.trim();
+
+    errorEl.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Creando cuenta...';
+
+    const r = await registrar({ deviceId, telefono: tel, pin, nombre });
+
+    btn.disabled = false;
+    btn.textContent = 'Crear cuenta';
+
+    if (r.ok) {
+      exitoEl.textContent = `¡Bienvenida/o ${r.cliente.nombre || ''}! Cuenta creada.`;
+      actualizarChipSesion();
+      setTimeout(() => modal.style.display = 'none', 1500);
+    } else {
+      errorEl.textContent = r.error;
+    }
+  });
+
+  // Login
+  document.getElementById('btn-login')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-login');
+    const tel = document.getElementById('auth-telefono-login').value.trim();
+    const pin = document.getElementById('auth-pin-login').value.trim();
+
+    errorEl.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Ingresando...';
+
+    const r = await login({ telefono: tel, pin });
+
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+
+    if (r.ok) {
+      exitoEl.textContent = `¡Hola ${r.cliente.nombre || ''}!`;
+      actualizarChipSesion();
+      setTimeout(() => modal.style.display = 'none', 1200);
+    } else {
+      errorEl.textContent = r.error;
+    }
+  });
+}
+
+// ── Prompt de registro post-pedido ────────
+
+export function mostrarPromptRegistro() {
+  const sesion = obtenerSesion();
+  if (sesion?.telefono) return; // ya está registrado
+
+  setTimeout(() => {
+    const modal = document.getElementById('modal-auth');
+    if (modal) modal.style.display = 'flex';
+  }, 800);
+}
+
+// ── Historial ─────────────────────────────
+
+function iniciarHistorial() {
+  document.getElementById('historial-cerrar')?.addEventListener('click', () => {
+    document.getElementById('modal-historial').style.display = 'none';
+  });
+}
+
+async function abrirHistorial() {
+  const modal  = document.getElementById('modal-historial');
+  const lista  = document.getElementById('lista-historial');
+  const sesion = obtenerSesion();
+  if (!modal || !lista || !sesion) return;
+
+  modal.style.display = 'flex';
+  lista.innerHTML     = '<p style="color:#888; font-size:.9rem; text-align:center;">Cargando...</p>';
+
+  try {
+    const { SUPABASE_URL, SUPABASE_KEY } = await import('./config.js');
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/pedidos?device_id=eq.${encodeURIComponent(sesion.device_id)}&order=created_at.desc&limit=20`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const pedidos = await res.json();
+
+    if (!pedidos.length) {
+      lista.innerHTML = '<p style="color:#888; font-size:.9rem; text-align:center;">Aún no tienes pedidos</p>';
+      return;
+    }
+
+    lista.innerHTML = '';
+    for (const p of pedidos) {
+      const fecha = new Date(p.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' });
+      const items = Array.isArray(p.items)
+        ? p.items.map(i => `${i.nombre}${i.variante ? ` (${i.variante})` : ''} x${i.cantidad}`).join(', ')
+        : '';
+      const div = document.createElement('div');
+      div.style.cssText = 'border-bottom:1px solid #eee; padding:.9rem 0;';
+      div.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:.3rem;">
+          <span style="font-size:.82rem; color:#888;">${fecha}</span>
+          <span style="font-weight:bold; color:#8B1A2F;">$${(p.total||0).toLocaleString('es-CL')}</span>
+        </div>
+        <div style="font-size:.85rem; color:#555;">${items}</div>
+      `;
+      lista.appendChild(div);
+    }
+  } catch {
+    lista.innerHTML = '<p style="color:#c0392b; font-size:.9rem; text-align:center;">No se pudo cargar el historial</p>';
   }
 }
