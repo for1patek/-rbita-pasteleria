@@ -100,12 +100,18 @@ function renderizarItems(items, contenedor) {
     div.appendChild(precio);
     div.appendChild(control);
 
-    // Al tocar el item → mostrar control
+    // Al tocar el item → mostrar/ocultar control (toggle)
     div.addEventListener('click', () => {
-      precio.style.display = 'none';
-      control.style.display = 'flex';
-      control.querySelector('.qty-num').textContent = '1';
-      control._cantidad = 1;
+      const abierto = control.style.display === 'flex';
+      if (abierto) {
+        control.style.display = 'none';
+        precio.style.display = '';
+      } else {
+        precio.style.display = 'none';
+        control.style.display = 'flex';
+        control.querySelector('.qty-num').textContent = '1';
+        control._cantidad = 1;
+      }
     });
 
     contenedor.appendChild(div);
