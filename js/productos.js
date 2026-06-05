@@ -62,7 +62,7 @@ export function renderizarMenu(productos) {
 function renderizarItems(items, contenedor) {
   for (const producto of items) {
     const div = document.createElement('div');
-    div.className = 'item item-clickable';
+    div.className = 'item item-clickable item-card';
     div.dataset.id = producto.id;
 
     const izq = document.createElement('div');
