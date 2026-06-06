@@ -525,17 +525,34 @@
       const hora  = new Date(p.created_at).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
       const items = Array.isArray(p.items) ? p.items.map(i=>`${i.nombre}${i.variante?` (${i.variante})`:''} x${i.cantidad}`).join(', ') : '';
       const entrega = p.delivery ? `🚚 Delivery${p.ubicacion_texto?' · '+p.ubicacion_texto:''}` : '🏪 Retiro en local';
+      const anulado = p.anulado === true;
       const div = document.createElement('div');
       div.className = 'pedido-item';
+      div.style.opacity = anulado ? '0.45' : '1';
       div.innerHTML = `
-        <div class="pedido-meta"><span class="pedido-canal">💬 WhatsApp</span><span style="font-weight:bold">$${(p.total||0).toLocaleString('es-CL')}</span></div>
+        <div class="pedido-meta">
+          <span class="pedido-canal">💬 WhatsApp${anulado?' <span style="color:var(--danger);font-size:.75rem">· Anulado</span>':''}</span>
+          <span style="font-weight:bold;${anulado?'text-decoration:line-through;color:var(--muted)':''}">$${(p.total||0).toLocaleString('es-CL')}</span>
+        </div>
         <div class="pedido-hora">${hora}${p.nombre_cliente?' · '+p.nombre_cliente:''}</div>
         <div class="pedido-items-txt">${items}</div>
         <div class="pedido-entrega ${p.delivery?'delivery':'retiro'}">${entrega}</div>
+        ${!anulado ? `<button class="btn-anular" data-id="${p.id}" style="margin-top:.5rem;background:none;border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:.3rem .8rem;font-size:.78rem;cursor:pointer;font-family:inherit;">Anular pedido</button>` : `<button class="btn-reactivar" data-id="${p.id}" style="margin-top:.5rem;background:none;border:1px solid var(--muted);color:var(--muted);border-radius:6px;padding:.3rem .8rem;font-size:.78rem;cursor:pointer;font-family:inherit;">Reactivar</button>`}
       `;
       lista.appendChild(div);
     }
   }
+
+  // Anular / reactivar pedido
+  document.getElementById('lista-pedidos').addEventListener('click', async e => {
+    const btnAnular = e.target.closest('.btn-anular');
+    const btnReact  = e.target.closest('.btn-reactivar');
+    const id = btnAnular?.dataset.id || btnReact?.dataset.id;
+    if (!id) return;
+    const anulado = !!btnReact;
+    const res = await supaFetch(`pedidos?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({ anulado: !anulado }) });
+    if (res.ok) cargarPedidos();
+  });
 
   // ── Clientes ──────────────────────────────
   async function cargarClientes() {
@@ -596,7 +613,7 @@
 
   async function cargarRendimiento(periodo) {
     const desde = fechaDesde(periodo);
-    const res   = await supaFetch(`pedidos?created_at=gte.${desde}&select=*`);
+    const res   = await supaFetch(`pedidos?created_at=gte.${desde}&anulado=eq.false&select=*`);
     const pedidos = await res.json();
 
     const total    = pedidos.reduce((s,p)=>s+(p.total||0),0);
