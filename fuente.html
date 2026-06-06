@@ -102,6 +102,11 @@
   .slider-dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0; background: var(--bg); }
   .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); cursor: pointer; transition: background 0.2s; }
   .dot.active { background: var(--primary); }
+
+  .contact-btns { display: flex; gap: 12px; justify-content: center; margin-top: 10px; }
+  .contact-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: white; border: 1px solid var(--border); transition: transform .2s; }
+  .contact-btn:hover { transform: scale(1.1); }
+  .contact-btn svg { width: 26px; height: 26px; }
 </style>
 </head>
 <body>
@@ -172,6 +177,15 @@
   <a class="location-btn" href="https://maps.app.goo.gl/RQJpEevGV9xaCPWX9" target="_blank">
     📍 Toca aquí para ubicarnos
   </a>
+    <div style="font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--primary);margin:12px 0 8px;">Contacto</div>
+    <div class="contact-btns">
+      <a class="contact-btn" href="https://wa.me/56971019691" target="_blank" aria-label="WhatsApp">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><radialGradient id="wag" cx="11.987" cy="44.637" r="44.222" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#44e000"/><stop offset="1" stop-color="#25d366"/></radialGradient><path fill="url(#wag)" d="M24 4C13 4 4 13 4 24c0 3.7 1 7.1 2.8 10.1L4 44l10.2-2.7C17.1 43 20.5 44 24 44c11 0 20-9 20-20S35 4 24 4z"/><path fill="#fff" d="M34.5 29.2c-.5-.3-3-1.5-3.5-1.7-.5-.2-.8-.3-1.1.2s-1.3 1.7-1.6 2c-.3.4-.6.4-1.1.1-3-1.5-5-2.7-6.9-6.1-.5-.9.5-.8 1.5-2.8.2-.4.1-.7-.1-1-.2-.3-1.1-2.6-1.5-3.6-.4-.9-.8-.8-1.1-.8h-.9c-.3 0-.8.1-1.2.6-.4.5-1.6 1.5-1.6 3.8s1.6 4.4 1.8 4.7c.2.3 3.2 4.9 7.7 6.8 4.6 1.9 4.6 1.3 5.4 1.2.8-.1 2.6-1.1 3-2.1.4-1 .4-1.9.3-2.1-.1-.1-.4-.2-.9-.5z"/></svg>
+      </a>
+      <a class="contact-btn" href="https://www.instagram.com/orbita300frutillar" target="_blank" aria-label="Instagram">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><radialGradient id="igg1" cx="19.38" cy="42.035" r="44.899" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fd5"/><stop offset=".328" stop-color="#ff543f"/><stop offset=".841" stop-color="#c837ab"/></radialGradient><path fill="url(#igg1)" d="M34.017 41.99l-20 .019c-4.4.004-8.003-3.592-8.008-7.992l-.019-20c-.004-4.4 3.592-8.003 7.992-8.008l20-.019c4.4-.004 8.003 3.592 8.008 7.992l.019 20c.005 4.401-3.592 8.004-7.992 8.008z"/><path fill="#fff" d="M24 31c-3.859 0-7-3.14-7-7s3.141-7 7-7 7 3.14 7 7-3.141 7-7 7zm0-12c-2.757 0-5 2.243-5 5s2.243 5 5 5 5-2.243 5-5-2.243-5-5-5z"/><circle cx="31.5" cy="16.5" r="1.5" fill="#fff"/></svg>
+      </a>
+    </div>
 </div>
 
 <script>
