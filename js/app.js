@@ -295,7 +295,7 @@ function actualizarTotalModal() {
 
   const btnD = document.getElementById('btn-delivery');
   if (btnD) {
-    btnD.innerHTML = resumen.subtotal >= DELIVERY.gratis_desde
+    btnD.innerHTML = resumen.subtotal >= (parseInt(configApp?.delivery_gratis_desde) || DELIVERY.gratis_desde)
       ? 'Delivery <span class="delivery-tag gratis">Gratis 🎉</span>'
       : `Delivery <span class="delivery-tag">+$${DELIVERY.costo.toLocaleString('es-CL')}</span>`;
   }
@@ -374,7 +374,7 @@ async function enviar(canal) {
       ubicacion: ubicacionNorm,
       nombreCliente,
       canal,
-      descuentoPct,
+      descuentoPct:   parseInt(configApp?.descuento_primer_pedido ?? '20') || 20,
       esPrimerPedido,
     });
     btnEnviar.disabled    = false;
