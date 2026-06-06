@@ -196,7 +196,7 @@ function iniciarModal() {
 function cerrarModal() {
   document.getElementById('modal-pedido')?.classList.remove('visible');
   document.body.classList.remove('modal-open');
-  conDelivery = false;
+  conDelivery = null;
   const btnRetiro   = document.getElementById('btn-retiro');
   const btnDelivery = document.getElementById('btn-delivery');
   const seccion     = document.getElementById('seccion-ubicacion');
@@ -344,7 +344,7 @@ function mostrarBannerRegistro() {
 
 async function enviar(canal) {
   // Retiro o delivery es obligatorio
-  if (conDelivery === false && !document.getElementById('btn-retiro')?.classList.contains('activo')) {
+  if (conDelivery === null) {
     const msg = document.getElementById('delivery-mensaje');
     if (msg) { msg.textContent = 'Elige Retiro en local o Delivery para continuar.'; msg.style.display = 'block'; setTimeout(() => { msg.style.display = 'none'; }, 3500); }
     return;
