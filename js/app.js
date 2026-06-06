@@ -7,7 +7,7 @@ import { cargarProductos, renderizarMenu, productosDB } from './productos.js';
 import { alCambiar, obtenerResumen, estaVacio, vaciar, calcularDelivery, calcularDescuento } from './carrito.js';
 import { obtenerDeviceId }         from './seguridad.js';
 import { obtenerOCrearCliente }    from './db.js';
-import { obtenerUbicacionGuardada, guardarUbicacion, pedirGPS, limpiarUbicacionGuardada, coordsADireccion, coordsALink } from './ubicacion.js';
+import { obtenerUbicacionGuardada, guardarUbicacion, limpiarUbicacionGuardada } from './ubicacion.js';
 import { enviarPedido }            from './pedido.js';
 import { DELIVERY }                from './config.js';
 import { leerConfig, deliveryDisponible, minAHora } from './config-panel.js';
@@ -98,7 +98,6 @@ function iniciarModal() {
   const btnRetiro        = document.getElementById('btn-retiro');
   const btnDelivery      = document.getElementById('btn-delivery');
   const seccionUbicacion = document.getElementById('seccion-ubicacion');
-  const btnGPS           = document.getElementById('btn-gps');
   const chkGuardar       = document.getElementById('chk-guardar');
   const inputNombre      = document.getElementById('input-nombre');
   const btnWsp           = document.getElementById('btn-enviar-wsp');
@@ -162,35 +161,30 @@ function iniciarModal() {
     actualizarTotalModal();
   });
 
-  // GPS → dirección legible
-  btnGPS?.addEventListener('click', async () => {
-    btnGPS.textContent = 'Obteniendo ubicación...';
-    btnGPS.disabled = true;
-    try {
-      const coords   = await pedirGPS();
-      const direccion = await coordsADireccion(coords.lat, coords.lng);
-      ubicacion = { ubicacion_texto: direccion, ubicacion_lat: coords.lat, ubicacion_lng: coords.lng };
+  // Campo de dirección — actualiza ubicacion en tiempo real
+  const inputDir = document.getElementById('input-direccion');
+  inputDir?.addEventListener('input', () => {
+    const texto = inputDir.value.trim();
+    ubicacion = texto ? { ubicacion_texto: texto, ubicacion_lat: null, ubicacion_lng: null } : null;
+  });
 
-      btnGPS.textContent = direccion
-        ? `📍 ${direccion}`
-        : '📍 Ubicación obtenida ✓';
-
-      if (chkGuardar?.checked) {
-        await guardarUbicacion(deviceId, ubicacion);
-      }
-    } catch (e) {
-      btnGPS.textContent = '📍 Intentar de nuevo';
-    } finally {
-      btnGPS.disabled = false;
+  // Guardar dirección al marcar checkbox
+  chkGuardar?.addEventListener('change', async () => {
+    if (chkGuardar.checked && inputDir?.value.trim()) {
+      ubicacion = { ubicacion_texto: inputDir.value.trim(), ubicacion_lat: null, ubicacion_lng: null };
+      await guardarUbicacion(deviceId, ubicacion);
     }
   });
 
   // Cambiar ubicación guardada
   document.getElementById('btn-cambiar-ubicacion')?.addEventListener('click', () => {
+    const textoAnterior = ubicacion?.ubicacion_texto || '';
     limpiarUbicacionGuardada();
     ubicacion = null;
     document.getElementById('ubicacion-guardada').style.display = 'none';
     document.getElementById('ubicacion-nueva').style.display    = 'block';
+    const inputDir = document.getElementById('input-direccion');
+    if (inputDir && textoAnterior) inputDir.value = textoAnterior;
   });
 
   btnWsp?.addEventListener('click', () => enviar('whatsapp'));
@@ -308,7 +302,8 @@ function mostrarUbicacionGuardada() {
   const divNueva      = document.getElementById('ubicacion-nueva');
   const textoGuardado = document.getElementById('texto-ubicacion-guardada');
   if (!ubicacion) return;
-  const texto = ubicacion.ubicacion_texto || (ubicacion.ubicacion_lat ? 'Ubicación GPS guardada' : '');
+  const texto = ubicacion.ubicacion_texto || '';
+  if (!texto) return; // no mostrar si no hay texto
   if (textoGuardado) textoGuardado.textContent = texto;
   if (divGuardada) divGuardada.style.display = 'block';
   if (divNueva)    divNueva.style.display    = 'none';
