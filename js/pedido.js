@@ -5,7 +5,6 @@
 import { CONTACTO, DELIVERY } from './config.js';
 import { crearPedido } from './db.js';
 import { sanitizar, validarItems, verificarRateLimit, registrarPedidoEnRateLimit } from './seguridad.js';
-import { coordsALink } from './ubicacion.js';
 import { obtenerTotal, calcularDelivery } from './carrito.js';
 
 // ── Armar texto del mensaje ───────────────
@@ -26,33 +25,24 @@ export function armarMensaje({ items, subtotal, descuentoMonto, conDelivery, cos
   lineas.push(`Subtotal: $${subtotal.toLocaleString('es-CL')}`);
 
   if (descuentoMonto > 0) {
-    lineas.push(`Descuento primer pedido 🎉: -$${descuentoMonto.toLocaleString('es-CL')}`);
+    lineas.push(`🎉 Descuento primer pedido (${Math.round(descuentoMonto*100/subtotal)}%): -$${descuentoMonto.toLocaleString('es-CL')}`);
   }
 
   if (conDelivery) {
-    if (costoDelivery === 0) {
-      lineas.push('Delivery: Gratis 🎉');
-    } else {
-      lineas.push(`Delivery: $${costoDelivery.toLocaleString('es-CL')}`);
-    }
-    lineas.push(`Total: $${total.toLocaleString('es-CL')}`);
+    lineas.push(costoDelivery === 0 ? '🚚 Delivery: Gratis 🎉' : `🚚 Delivery: $${costoDelivery.toLocaleString('es-CL')}`);
+    lineas.push(`💰 Total: $${total.toLocaleString('es-CL')}`);
   } else {
-    lineas.push('Retiro en local');
-    lineas.push(`Total: $${total.toLocaleString('es-CL')}`);
+    lineas.push('🏪 Retiro en local');
+    lineas.push(`💰 Total: $${total.toLocaleString('es-CL')}`);
   }
 
   if (nombreCliente) {
     lineas.push('');
-    lineas.push(`Nombre: ${sanitizar(nombreCliente)}`);
+    lineas.push(`👤 Nombre: ${sanitizar(nombreCliente)}`);
   }
 
-  if (ubicacion) {
-    lineas.push('');
-    if (ubicacion.lat && ubicacion.lng) {
-      lineas.push(`📍 Ubicación: ${coordsALink(ubicacion.lat, ubicacion.lng)}`);
-    } else if (ubicacion.texto) {
-      lineas.push(`📍 Dirección: ${sanitizar(ubicacion.texto)}`);
-    }
+  if (ubicacion?.texto) {
+    lineas.push(`📍 Dirección: ${sanitizar(ubicacion.texto)}`);
   }
 
   return lineas.join('\n');
