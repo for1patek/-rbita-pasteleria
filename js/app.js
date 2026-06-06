@@ -146,6 +146,7 @@ function iniciarModal() {
     btnRetiro.classList.add('activo');
     btnDelivery.classList.remove('activo');
     seccionUbicacion.style.display = 'none';
+    document.getElementById('seccion-retiro').style.display = 'block';
     actualizarTotalModal();
   });
 
@@ -157,6 +158,7 @@ function iniciarModal() {
     btnDelivery.classList.add('activo');
     btnRetiro.classList.remove('activo');
     seccionUbicacion.style.display = 'block';
+    document.getElementById('seccion-retiro').style.display = 'none';
     if (ubicacion?.ubicacion_texto) mostrarUbicacionGuardada();
     actualizarTotalModal();
   });
@@ -201,6 +203,8 @@ function cerrarModal() {
   btnRetiro?.classList.remove('activo');
   btnDelivery?.classList.remove('activo');
   if (seccion) seccion.style.display = 'none';
+  const seccionRetiro = document.getElementById('seccion-retiro');
+  if (seccionRetiro) seccionRetiro.style.display = 'none';
 }
 
 function renderizarResumenModal() {
