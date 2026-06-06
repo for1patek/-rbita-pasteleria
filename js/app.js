@@ -353,12 +353,19 @@ async function enviar(canal) {
   btnEnviar.textContent = 'Enviando...';
 
   try {
+    // Normalizar claves de ubicación para pedido.js
+    const ubicacionNorm = ubicacion ? {
+      texto: ubicacion.ubicacion_texto || ubicacion.texto || '',
+      lat:   ubicacion.ubicacion_lat   ?? ubicacion.lat   ?? null,
+      lng:   ubicacion.ubicacion_lng   ?? ubicacion.lng   ?? null,
+    } : null;
+
     await enviarPedido({
       deviceId: obtenerSesion()?.device_id || deviceId,
       items:       resumen.items,
       productosDB: (await import('./productos.js')).productosDB,
       conDelivery,
-      ubicacion,
+      ubicacion: ubicacionNorm,
       nombreCliente,
       canal,
       descuentoPct,
