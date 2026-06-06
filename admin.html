@@ -567,10 +567,12 @@
     lista.innerHTML = '';
     for (const p of pedidos) {
       const fecha = new Date(p.created_at).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'});
+      const hora  = new Date(p.created_at).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
       const items = Array.isArray(p.items) ? p.items.map(i=>`${i.nombre} x${i.cantidad}`).join(', ') : '';
+      const descTag = p.descuento_aplicado ? ' · <span style="color:#5aab6e;font-size:.78rem">20% desc.</span>' : '';
       const div = document.createElement('div');
       div.style.cssText = 'border-bottom:1px solid var(--border);padding:.8rem 0;font-size:.88rem';
-      div.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:.2rem"><span style="color:var(--muted)">${fecha}</span><span style="color:var(--primary);font-weight:bold">$${(p.total||0).toLocaleString('es-CL')}</span></div><div style="color:var(--muted)">${items}</div>`;
+      div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem"><span style="color:var(--muted)">${fecha} · ${hora}</span><span style="color:var(--primary);font-weight:bold">$${(p.total||0).toLocaleString('es-CL')}${descTag}</span></div><div style="color:var(--muted)">${items}</div>`;
       lista.appendChild(div);
     }
   }
