@@ -13,7 +13,7 @@ import { obtenerTotal, calcularDelivery } from './carrito.js';
 export function armarMensaje({ items, subtotal, descuentoMonto, conDelivery, costoDelivery, total, ubicacion, nombreCliente }) {
   const lineas = [];
 
-  lineas.push('Hola! Quiero hacer un pedido 🛒');
+  lineas.push('Hola, quiero hacer un pedido 🛒');
   lineas.push('');
 
   for (const item of items) {
