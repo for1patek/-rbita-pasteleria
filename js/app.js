@@ -343,6 +343,13 @@ function mostrarBannerRegistro() {
 }
 
 async function enviar(canal) {
+  // Retiro o delivery es obligatorio
+  if (conDelivery === false && !document.getElementById('btn-retiro')?.classList.contains('activo')) {
+    const msg = document.getElementById('delivery-mensaje');
+    if (msg) { msg.textContent = 'Elige Retiro en local o Delivery para continuar.'; msg.style.display = 'block'; setTimeout(() => { msg.style.display = 'none'; }, 3500); }
+    return;
+  }
+
   const inputNombre   = document.getElementById('input-nombre');
   const nombreCliente = inputNombre?.value?.trim() || '';
   const resumen       = obtenerResumen();
