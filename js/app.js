@@ -441,7 +441,7 @@ function actualizarChipSesion() {
   } else if (sesion) {
     nombre.textContent = 'Mi cuenta';
   } else {
-    nombre.innerHTML = 'Ingresar <span style="background:#c8a97e;color:#1a1a1a;font-size:.7rem;padding:.1rem .4rem;border-radius:4px;margin-left:.3rem;font-weight:bold;">20% OFF</span>';
+    nombre.innerHTML = 'Registrarse <span style="background:#c8a97e;color:#1a1a1a;font-size:.7rem;padding:.1rem .4rem;border-radius:4px;margin-left:.3rem;font-weight:bold;">20% OFF</span>';
     chip.title = 'Regístrate y obtén 20% en tu primer pedido';
   }
 }
