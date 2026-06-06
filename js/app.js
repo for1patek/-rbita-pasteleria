@@ -63,7 +63,7 @@ function aplicarEstadoDelivery() {
     if (msg) {
       const mensajes = {
         desactivado:     'Delivery no disponible por ahora.',
-        cerrado_hoy:     'Sin delivery hoy. ¡Podés pasar a buscarlo!',
+        cerrado_hoy:     'Sin delivery hoy. Puedes pasar a buscarlo.',
         fuera_horario:   `Delivery disponible de ${minAHora(estado.ini)} a ${minAHora(estado.fin)} hrs.`,
         horario_invalido:'Delivery no disponible por ahora.',
       };
@@ -484,7 +484,7 @@ function iniciarModalAuth() {
     btn.textContent = 'Crear cuenta';
 
     if (r.ok) {
-      exitoEl.textContent = `¡Bienvenida/o ${r.cliente.nombre || ''}! Cuenta creada.`;
+      exitoEl.textContent = `¡Bienvenido/a ${r.cliente.nombre || ''}! Cuenta creada.`;
       actualizarChipSesion();
       setTimeout(() => modal.style.display = 'none', 1500);
     } else {
@@ -555,22 +555,26 @@ async function abrirHistorial() {
     const pedidos = await res.json();
 
     if (!pedidos.length) {
-      lista.innerHTML = '<p style="color:#888; font-size:.9rem; text-align:center;">Aún no tienes pedidos</p>';
+      lista.innerHTML = '<p style="color:#888; font-size:.9rem; text-align:center;">No tienes pedidos aún</p>';
       return;
     }
 
     lista.innerHTML = '';
     for (const p of pedidos) {
       const fecha = new Date(p.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' });
+      const hora  = new Date(p.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
       const items = Array.isArray(p.items)
         ? p.items.map(i => `${i.nombre}${i.variante ? ` (${i.variante})` : ''} x${i.cantidad}`).join(', ')
+        : '';
+      const descuentoTag = p.descuento_aplicado
+        ? `<span style="font-size:.75rem;background:#e8f5e9;color:#2d6a4f;padding:.15rem .5rem;border-radius:4px;margin-left:.4rem;">20% desc.</span>`
         : '';
       const div = document.createElement('div');
       div.style.cssText = 'border-bottom:1px solid #eee; padding:.9rem 0;';
       div.innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-bottom:.3rem;">
-          <span style="font-size:.82rem; color:#888;">${fecha}</span>
-          <span style="font-weight:bold; color:#8B1A2F;">$${(p.total||0).toLocaleString('es-CL')}</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.3rem;">
+          <span style="font-size:.82rem; color:#888;">${fecha} · ${hora}</span>
+          <span style="font-weight:bold; color:#8B1A2F;">$${(p.total||0).toLocaleString('es-CL')}${descuentoTag}</span>
         </div>
         <div style="font-size:.85rem; color:#555;">${items}</div>
       `;
