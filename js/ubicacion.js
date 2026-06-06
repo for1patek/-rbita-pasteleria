@@ -81,20 +81,25 @@ export function pedirGPS() {
       return;
     }
 
+    // Primero intentamos alta precisión, si falla usamos baja precisión
     navigator.geolocation.getCurrentPosition(
-      pos => resolve({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-      }),
-      err => {
-        const mensajes = {
-          [err.PERMISSION_DENIED]:    'Permiso de ubicación denegado',
-          [err.POSITION_UNAVAILABLE]: 'Ubicación no disponible',
-          [err.TIMEOUT]:              'Tiempo de espera agotado',
-        };
-        reject(new Error(mensajes[err.code] || 'Error al obtener ubicación'));
+      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {
+        // Fallback: baja precisión
+        navigator.geolocation.getCurrentPosition(
+          pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          err => {
+            const mensajes = {
+              [err.PERMISSION_DENIED]:    'Permiso de ubicación denegado',
+              [err.POSITION_UNAVAILABLE]: 'Ubicación no disponible',
+              [err.TIMEOUT]:              'Tiempo de espera agotado',
+            };
+            reject(new Error(mensajes[err.code] || 'Error al obtener ubicación'));
+          },
+          { timeout: 8000, maximumAge: 60000, enableHighAccuracy: false }
+        );
       },
-      { timeout: 10000, maximumAge: 60000, enableHighAccuracy: false }
+      { timeout: 8000, maximumAge: 30000, enableHighAccuracy: true }
     );
   });
 }
