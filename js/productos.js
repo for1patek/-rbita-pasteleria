@@ -172,13 +172,18 @@ function renderizarGalletas(items, contenedor) {
 
       btn.addEventListener('click', e => {
         e.stopPropagation();
-        // Ocultar otros controles del mismo grupo
+        const yaActivo = btn.classList.contains('activo');
+        // Ocultar todos los controles del grupo
         opciones.querySelectorAll('.galleta-control').forEach(c => c.style.display = 'none');
         opciones.querySelectorAll('.galleta-btn').forEach(b => b.classList.remove('activo'));
-        btn.classList.add('activo');
-        control.style.display = 'flex';
-        control.querySelector('.qty-num').textContent = '1';
-        control._cantidad = 1;
+        if (!yaActivo) {
+          // Abrir este
+          btn.classList.add('activo');
+          control.style.display = 'flex';
+          control.querySelector('.qty-num').textContent = '1';
+          control._cantidad = 1;
+        }
+        // Si ya estaba activo → toggle cierra, no hace nada más
       });
 
       const wrap = document.createElement('div');
