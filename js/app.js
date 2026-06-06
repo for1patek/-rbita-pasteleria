@@ -16,7 +16,7 @@ import { obtenerSesion, cerrarSesion, registrar, login, estaLogueado } from './a
 // ── Estado global ─────────────────────────
 let deviceId      = null;
 let ubicacion     = null;
-let conDelivery   = false;
+let conDelivery   = null; // null=sin elegir, false=retiro, true=delivery
 let configApp     = null;
 let descuentoPct  = 0;    // % leído desde config_pasteleria
 let esPrimerPedido = false; // se verifica al abrir el modal
