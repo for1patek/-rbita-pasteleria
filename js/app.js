@@ -125,6 +125,7 @@ function iniciarModal() {
 
     renderizarResumenModal();
     mostrarBannerDescuento();
+    mostrarBannerRegistro();
 
     // Autocompletar nombre si hay sesión
     const inputNombre = document.getElementById('input-nombre');
@@ -319,6 +320,24 @@ function mostrarBannerDescuento() {
   if (esPrimerPedido && descuentoPct > 0) {
     banner.textContent = `🎉 Tienes un ${descuentoPct}% de descuento en tu primer pedido`;
     banner.style.display = 'block';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function mostrarBannerRegistro() {
+  const banner = document.getElementById('banner-registro');
+  if (!banner) return;
+  const sesion = obtenerSesion();
+  if (!sesion?.telefono) {
+    banner.style.display = 'block';
+    banner.onclick = () => {
+      cerrarModal();
+      setTimeout(() => {
+        const modal = document.getElementById('modal-auth');
+        if (modal) modal.style.display = 'flex';
+      }, 200);
+    };
   } else {
     banner.style.display = 'none';
   }
