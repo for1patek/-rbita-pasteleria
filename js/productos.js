@@ -236,11 +236,12 @@ function crearControl(producto) {
   agrBtn.addEventListener('click', e => {
     e.stopPropagation();
     agregar({
-      id:       producto.id,
-      nombre:   producto.nombre,
-      precio:   producto.precio,
-      variante: producto.variante ?? null,
-      cantidad: wrap._cantidad,
+      id:        producto.id,
+      nombre:    producto.nombre,
+      precio:    producto.precio,
+      variante:  producto.variante  ?? null,
+      categoria: producto.categoria ?? null,
+      cantidad:  wrap._cantidad,
     });
 
     // Feedback visual
