@@ -33,7 +33,8 @@ export function armarMensaje({ items, subtotal, descuentoMonto, conDelivery, cos
   lineas.push(`Subtotal: $${subtotal.toLocaleString('es-CL')}`);
 
   if (descuentoMonto > 0) {
-    lineas.push(`🎉 Descuento primer pedido (${Math.round(descuentoMonto*100/subtotal)}%): -$${descuentoMonto.toLocaleString('es-CL')}`);
+    const pct = subtotal > 0 ? Math.round(descuentoMonto * 100 / subtotal) : 0;
+    lineas.push(`🎉 Descuento primer pedido (${pct}%): -$${descuentoMonto.toLocaleString('es-CL')}`);
   }
 
   if (conDelivery) {
