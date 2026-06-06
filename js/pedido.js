@@ -16,17 +16,22 @@ export function armarMensaje({ items, subtotal, descuentoMonto, conDelivery, cos
   lineas.push('');
 
   for (const item of items) {
+    let nombreMostrar = item.nombre;
     let sufijo = '';
-    if (item.variante) {
-      sufijo = ` (${item.variante})`;
+
+    if (item.categoria === 'galleta') {
+      nombreMostrar = `Galleta ${item.nombre}`;
+      sufijo = item.variante ? ` (${item.variante})` : '';
     } else if (item.categoria === 'trozo') {
-      sufijo = ' (trozo)';
+      const esMuffin = item.nombre.toLowerCase().includes('muffin');
+      sufijo = esMuffin ? ' (u)' : ' (trozo)';
     } else if (item.categoria === 'entero') {
       const esMuffin = item.nombre.toLowerCase().includes('muffin');
       sufijo = esMuffin ? ' (docena)' : ' (entero)';
     }
+
     const itemTotal = item.precio * item.cantidad;
-    lineas.push(`• ${item.nombre}${sufijo} x${item.cantidad} → $${itemTotal.toLocaleString('es-CL')}`);
+    lineas.push(`• ${nombreMostrar}${sufijo} x${item.cantidad} → $${itemTotal.toLocaleString('es-CL')}`);
   }
 
   lineas.push('');
