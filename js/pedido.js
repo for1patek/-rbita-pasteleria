@@ -16,9 +16,15 @@ export function armarMensaje({ items, subtotal, descuentoMonto, conDelivery, cos
   lineas.push('');
 
   for (const item of items) {
-    const variante  = item.variante   ? ` (${item.variante})`   : '';
-    const categoria = item.categoria  ? ` (${item.categoria})`  : '';
-    const sufijo    = item.variante   ? variante : categoria;
+    let sufijo = '';
+    if (item.variante) {
+      sufijo = ` (${item.variante})`;
+    } else if (item.categoria === 'trozo') {
+      sufijo = ' (trozo)';
+    } else if (item.categoria === 'entero') {
+      const esMuffin = item.nombre.toLowerCase().includes('muffin');
+      sufijo = esMuffin ? ' (docena)' : ' (entero)';
+    }
     const itemTotal = item.precio * item.cantidad;
     lineas.push(`• ${item.nombre}${sufijo} x${item.cantidad} → $${itemTotal.toLocaleString('es-CL')}`);
   }
