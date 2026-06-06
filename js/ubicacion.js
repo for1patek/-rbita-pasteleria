@@ -94,7 +94,7 @@ export function pedirGPS() {
         };
         reject(new Error(mensajes[err.code] || 'Error al obtener ubicación'));
       },
-      { timeout: 10000, maximumAge: 60000, enableHighAccuracy: true }
+      { timeout: 10000, maximumAge: 60000, enableHighAccuracy: false }
     );
   });
 }
