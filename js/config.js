@@ -20,7 +20,7 @@ export const CONTACTO = {
 
 // Rate limiting — máximo de pedidos por sesión por hora
 export const RATE_LIMIT = {
-  max_pedidos_por_hora: 5,
+  max_pedidos_por_hora: 20,
 };
 
 // Clave para localStorage
