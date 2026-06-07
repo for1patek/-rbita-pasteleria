@@ -420,6 +420,176 @@ function iniciarAuth() {
     abrirHistorial();
   });
 
+  // Perfil
+  document.getElementById('btn-ver-perfil')?.addEventListener('click', () => {
+    document.getElementById('menu-sesion').style.display = 'none';
+    abrirPerfil();
+  });
+
+  document.getElementById('perfil-cerrar')?.addEventListener('click', () => {
+    document.getElementById('modal-perfil').style.display = 'none';
+  });
+
+  document.getElementById('modal-perfil')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-perfil'))
+      document.getElementById('modal-perfil').style.display = 'none';
+  });
+
+  // Guardar nombre desde perfil
+  document.getElementById('btn-guardar-nombre')?.addEventListener('click', async () => {
+    const btn    = document.getElementById('btn-guardar-nombre');
+    const nombre = document.getElementById('perfil-nombre').value.trim();
+    const errorEl = document.getElementById('perfil-error');
+    const exitoEl = document.getElementById('perfil-exito');
+    errorEl.textContent = '';
+    exitoEl.textContent = '';
+
+    if (!nombre) { errorEl.textContent = 'Ingresa un nombre'; return; }
+
+    const sesion = obtenerSesion();
+    if (!sesion) return;
+
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+      const { SUPABASE_URL, SUPABASE_KEY } = await import('./config.js');
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?id=eq.${sesion.id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, updated_at: new Date().toISOString() }),
+      });
+      if (!res.ok) throw new Error();
+      const { guardarSesion } = await import('./auth.js');
+      guardarSesion({ ...sesion, nombre });
+      actualizarChipSesion();
+      exitoEl.textContent = 'Nombre actualizado ✓';
+    } catch { errorEl.textContent = 'Error al guardar'; }
+
+    btn.disabled = false;
+    btn.textContent = 'Guardar';
+  });
+
+  // Guardar email desde perfil
+  document.getElementById('btn-guardar-email-perfil')?.addEventListener('click', async () => {
+    const btn    = document.getElementById('btn-guardar-email-perfil');
+    const email  = document.getElementById('perfil-email').value.trim().toLowerCase();
+    const errorEl = document.getElementById('perfil-error');
+    const exitoEl = document.getElementById('perfil-exito');
+    errorEl.textContent = '';
+    exitoEl.textContent = '';
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errorEl.textContent = 'Email inválido'; return;
+    }
+
+    const sesion = obtenerSesion();
+    if (!sesion) return;
+
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+      const { SUPABASE_URL, SUPABASE_KEY } = await import('./config.js');
+
+      // Verificar duplicado (solo si cambió)
+      if (email !== sesion.email) {
+        const chk = await fetch(`${SUPABASE_URL}/rest/v1/clientes?email=eq.${encodeURIComponent(email)}&select=id&limit=1`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
+        const rows = chk.ok ? await chk.json() : [];
+        if (rows.length > 0) {
+          errorEl.textContent = 'Este email ya está en uso'; btn.disabled = false; btn.textContent = 'Guardar'; return;
+        }
+      }
+
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?id=eq.${sesion.id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, updated_at: new Date().toISOString() }),
+      });
+      if (!res.ok) throw new Error();
+      const { guardarSesion } = await import('./auth.js');
+      guardarSesion({ ...sesion, email });
+      document.getElementById('btn-agregar-email').style.display = 'none';
+      exitoEl.textContent = 'Email actualizado ✓';
+    } catch { errorEl.textContent = 'Error al guardar'; }
+
+    btn.disabled = false;
+    btn.textContent = 'Guardar';
+  });
+
+  // Guardar dirección desde perfil
+  document.getElementById('btn-guardar-direccion')?.addEventListener('click', async () => {
+    const btn   = document.getElementById('btn-guardar-direccion');
+    const dir   = document.getElementById('perfil-direccion').value.trim();
+    const errorEl = document.getElementById('perfil-error');
+    const exitoEl = document.getElementById('perfil-exito');
+    errorEl.textContent = '';
+    exitoEl.textContent = '';
+
+    const sesion = obtenerSesion();
+    if (!sesion) return;
+
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+      const { SUPABASE_URL, SUPABASE_KEY } = await import('./config.js');
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?id=eq.${sesion.id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ubicacion_texto: dir || null, updated_at: new Date().toISOString() }),
+      });
+      if (!res.ok) throw new Error();
+      exitoEl.textContent = dir ? 'Dirección guardada ✓' : 'Dirección eliminada ✓';
+    } catch { errorEl.textContent = 'Error al guardar la dirección'; }
+
+    btn.disabled = false;
+    btn.textContent = 'Guardar';
+  });
+
+  // Eliminar dirección desde perfil
+  document.getElementById('btn-eliminar-direccion')?.addEventListener('click', async () => {
+    const btn   = document.getElementById('btn-eliminar-direccion');
+    const errorEl = document.getElementById('perfil-error');
+    const exitoEl = document.getElementById('perfil-exito');
+    errorEl.textContent = '';
+    exitoEl.textContent = '';
+
+    const sesion = obtenerSesion();
+    if (!sesion) return;
+
+    btn.disabled = true;
+
+    try {
+      const { SUPABASE_URL, SUPABASE_KEY } = await import('./config.js');
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?id=eq.${sesion.id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ubicacion_texto: null, updated_at: new Date().toISOString() }),
+      });
+      if (!res.ok) throw new Error();
+      document.getElementById('perfil-direccion').value = '';
+      exitoEl.textContent = 'Dirección eliminada ✓';
+    } catch { errorEl.textContent = 'Error al eliminar la dirección'; }
+
+    btn.disabled = false;
+  });
+
+  // Cambiar PIN desde perfil → abre flujo reset
+  document.getElementById('btn-perfil-cambiar-pin')?.addEventListener('click', () => {
+    document.getElementById('modal-perfil').style.display = 'none';
+    // Abrir modal auth en vista reset-email
+    const modalAuth = document.getElementById('modal-auth');
+    modalAuth.style.display = 'flex';
+    document.getElementById('auth-vista-principal').style.display   = 'none';
+    document.getElementById('auth-vista-reset-email').style.display = 'block';
+    document.getElementById('auth-vista-reset-codigo').style.display = 'none';
+    // Pre-rellenar email si lo tiene
+    const sesion = obtenerSesion();
+    if (sesion?.email) document.getElementById('auth-email-reset').value = sesion.email;
+  });
+
   // Agregar email
   document.getElementById('btn-agregar-email')?.addEventListener('click', () => {
     document.getElementById('menu-sesion').style.display = 'none';
@@ -744,6 +914,35 @@ function iniciarHistorial() {
   document.getElementById('historial-cerrar')?.addEventListener('click', () => {
     document.getElementById('modal-historial').style.display = 'none';
   });
+}
+
+async function abrirPerfil() {
+  const modal   = document.getElementById('modal-perfil');
+  const sesion  = obtenerSesion();
+  if (!sesion) return;
+
+  // Rellenar campos con datos actuales
+  document.getElementById('perfil-nombre').value   = sesion.nombre   || '';
+  document.getElementById('perfil-telefono').textContent = sesion.telefono || '—';
+  document.getElementById('perfil-email').value    = sesion.email    || '';
+  document.getElementById('perfil-error').textContent = '';
+  document.getElementById('perfil-exito').textContent = '';
+
+  // Cargar dirección desde Supabase
+  try {
+    const { SUPABASE_URL, SUPABASE_KEY } = await import('./config.js');
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/clientes?id=eq.${sesion.id}&select=ubicacion_texto`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const rows = res.ok ? await res.json() : [];
+    const dir  = rows[0]?.ubicacion_texto;
+    document.getElementById('perfil-direccion').value = dir || '';
+  } catch {
+    document.getElementById('perfil-direccion').value = '';
+  }
+
+  modal.style.display = 'flex';
 }
 
 async function abrirHistorial() {
