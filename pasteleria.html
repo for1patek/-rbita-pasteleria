@@ -338,7 +338,7 @@
       <div style="margin-bottom:1.2rem;">
         <label style="font-size:.78rem; color:#888; display:block; margin-bottom:.3rem;">Teléfono</label>
         <div style="padding:.7rem 1rem; background:#f5f0e8; border-radius:10px; font-size:.95rem; color:#555;" id="perfil-telefono"></div>
-        <p style="font-size:.72rem; color:#bbb; margin:.3rem 0 0 .2rem;">Para cambiar el teléfono contacta al negocio por WhatsApp.</p>
+        <p style="font-size:.72rem; color:#bbb; margin:.3rem 0 0 .2rem;">Para cambiar el teléfono contáctanos por Instagram o WhatsApp.</p>
       </div>
 
       <!-- Email -->
@@ -351,14 +351,14 @@
         </div>
       </div>
 
-      <!-- Dirección guardada -->
+      <!-- Direcciones guardadas -->
       <div style="margin-bottom:1.5rem;">
-        <label style="font-size:.78rem; color:#888; display:block; margin-bottom:.3rem;">Dirección guardada</label>
-        <input id="perfil-direccion" type="text" maxlength="200" placeholder="Tu dirección de delivery"
-          style="width:100%; padding:.7rem 1rem; border:1.5px solid #ddd; border-radius:10px; font-family:inherit; font-size:.9rem; outline:none; background:#fff; box-sizing:border-box; margin-bottom:.5rem;">
+        <label style="font-size:.78rem; color:#888; display:block; margin-bottom:.6rem;">Direcciones guardadas</label>
+        <div id="perfil-lista-direcciones" style="margin-bottom:.8rem;"></div>
         <div style="display:flex; gap:.5rem;">
-          <button id="btn-guardar-direccion" style="flex:1; padding:.65rem; background:#8B1A2F; color:#fff; border:none; border-radius:10px; font-family:inherit; font-size:.85rem; cursor:pointer;">Guardar</button>
-          <button id="btn-eliminar-direccion" style="padding:.65rem .9rem; background:none; border:1.5px solid #ddd; border-radius:10px; font-family:inherit; font-size:.85rem; cursor:pointer; color:#c0392b;">Eliminar</button>
+          <input id="perfil-nueva-direccion" type="text" maxlength="200" placeholder="Agregar nueva dirección"
+            style="flex:1; padding:.7rem 1rem; border:1.5px solid #ddd; border-radius:10px; font-family:inherit; font-size:.88rem; outline:none; background:#fff; box-sizing:border-box;">
+          <button id="btn-agregar-direccion" style="padding:.7rem 1rem; background:#8B1A2F; color:#fff; border:none; border-radius:10px; font-family:inherit; font-size:.85rem; cursor:pointer; white-space:nowrap;">+ Agregar</button>
         </div>
       </div>
 
@@ -370,6 +370,18 @@
 
       <div id="perfil-error" style="color:#c0392b; font-size:.83rem; text-align:center; margin-top:.8rem; min-height:1.2em;"></div>
       <div id="perfil-exito" style="color:#2d6a4f; font-size:.83rem; text-align:center; margin-top:.8rem; min-height:1.2em;"></div>
+    </div>
+  </div>
+
+  <!-- Modal confirmación (eliminar dirección, etc.) -->
+  <div id="modal-confirmar" role="dialog" aria-modal="true" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:300; align-items:center; justify-content:center;">
+    <div style="background:#fffaf3; border-radius:18px; padding:2rem 1.5rem; width:min(88vw,360px); text-align:center;">
+      <p id="confirmar-mensaje" style="font-size:.95rem; color:#3a1a0a; margin:0 0 .6rem; font-weight:600;"></p>
+      <p id="confirmar-detalle" style="font-size:.85rem; color:#888; margin:0 0 1.5rem; font-style:italic;"></p>
+      <div style="display:flex; gap:.8rem; justify-content:center;">
+        <button id="confirmar-cancelar" style="flex:1; padding:.8rem; background:none; border:1.5px solid #ddd; border-radius:10px; font-family:inherit; font-size:.9rem; cursor:pointer; color:#555;">Cancelar</button>
+        <button id="confirmar-ok" style="flex:1; padding:.8rem; background:#c0392b; color:#fff; border:none; border-radius:10px; font-family:inherit; font-size:.9rem; font-weight:bold; cursor:pointer;">Eliminar</button>
+      </div>
     </div>
   </div>
 
