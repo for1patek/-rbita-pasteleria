@@ -80,3 +80,41 @@ export async function crearPedido(pedido) {
   });
   return rows?.[0] ?? null;
 }
+
+// ── Direcciones guardadas ─────────────────
+
+export async function obtenerDirecciones(clienteId) {
+  return query(`direcciones_guardadas?cliente_id=eq.${clienteId}&order=es_favorita.desc,created_at.asc`);
+}
+
+export async function guardarDireccion(clienteId, { texto, lat, lng }) {
+  return query('direcciones_guardadas', {
+    method: 'POST',
+    body: JSON.stringify({
+      cliente_id:  clienteId,
+      texto:       texto.trim(),
+      lat:         lat  ?? null,
+      lng:         lng  ?? null,
+      es_favorita: false,
+    }),
+  });
+}
+
+export async function eliminarDireccion(id) {
+  return query(`direcciones_guardadas?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { 'Prefer': 'return=minimal' },
+  });
+}
+
+export async function marcarFavorita(id, clienteId) {
+  // Quitar favorita a todas del cliente, luego marcar la elegida
+  await query(`direcciones_guardadas?cliente_id=eq.${clienteId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ es_favorita: false }),
+  });
+  return query(`direcciones_guardadas?id=eq.${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ es_favorita: true }),
+  });
+}
