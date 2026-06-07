@@ -518,62 +518,34 @@ function iniciarAuth() {
     btn.textContent = 'Guardar';
   });
 
-  // Guardar dirección desde perfil
-  document.getElementById('btn-guardar-direccion')?.addEventListener('click', async () => {
-    const btn   = document.getElementById('btn-guardar-direccion');
-    const dir   = document.getElementById('perfil-direccion').value.trim();
+  // Agregar nueva dirección desde perfil
+  document.getElementById('btn-agregar-direccion')?.addEventListener('click', async () => {
+    const btn    = document.getElementById('btn-agregar-direccion');
+    const input  = document.getElementById('perfil-nueva-direccion');
+    const texto  = input.value.trim();
     const errorEl = document.getElementById('perfil-error');
     const exitoEl = document.getElementById('perfil-exito');
     errorEl.textContent = '';
     exitoEl.textContent = '';
 
+    if (!texto) { errorEl.textContent = 'Ingresa una dirección'; return; }
+
     const sesion = obtenerSesion();
     if (!sesion) return;
 
-    btn.disabled = true;
+    btn.disabled    = true;
     btn.textContent = '...';
 
     try {
-      const { SUPABASE_URL, SUPABASE_KEY } = await import('./config.js');
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?id=eq.${sesion.id}`, {
-        method: 'PATCH',
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ubicacion_texto: dir || null, updated_at: new Date().toISOString() }),
-      });
-      if (!res.ok) throw new Error();
-      exitoEl.textContent = dir ? 'Dirección guardada ✓' : 'Dirección eliminada ✓';
+      const { guardarDireccion } = await import('./db.js');
+      await guardarDireccion(sesion.id, { texto });
+      input.value = '';
+      await cargarDireccionesPerfil(sesion.id);
+      exitoEl.textContent = 'Dirección agregada ✓';
     } catch { errorEl.textContent = 'Error al guardar la dirección'; }
 
-    btn.disabled = false;
-    btn.textContent = 'Guardar';
-  });
-
-  // Eliminar dirección desde perfil
-  document.getElementById('btn-eliminar-direccion')?.addEventListener('click', async () => {
-    const btn   = document.getElementById('btn-eliminar-direccion');
-    const errorEl = document.getElementById('perfil-error');
-    const exitoEl = document.getElementById('perfil-exito');
-    errorEl.textContent = '';
-    exitoEl.textContent = '';
-
-    const sesion = obtenerSesion();
-    if (!sesion) return;
-
-    btn.disabled = true;
-
-    try {
-      const { SUPABASE_URL, SUPABASE_KEY } = await import('./config.js');
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?id=eq.${sesion.id}`, {
-        method: 'PATCH',
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ubicacion_texto: null, updated_at: new Date().toISOString() }),
-      });
-      if (!res.ok) throw new Error();
-      document.getElementById('perfil-direccion').value = '';
-      exitoEl.textContent = 'Dirección eliminada ✓';
-    } catch { errorEl.textContent = 'Error al eliminar la dirección'; }
-
-    btn.disabled = false;
+    btn.disabled    = false;
+    btn.textContent = '+ Agregar';
   });
 
   // Cambiar PIN desde perfil → abre flujo reset
@@ -917,33 +889,90 @@ function iniciarHistorial() {
 }
 
 async function abrirPerfil() {
-  const modal   = document.getElementById('modal-perfil');
-  const sesion  = obtenerSesion();
+  const modal  = document.getElementById('modal-perfil');
+  const sesion = obtenerSesion();
   if (!sesion) return;
 
-  // Rellenar campos con datos actuales
-  document.getElementById('perfil-nombre').value   = sesion.nombre   || '';
-  document.getElementById('perfil-telefono').textContent = sesion.telefono || '—';
-  document.getElementById('perfil-email').value    = sesion.email    || '';
-  document.getElementById('perfil-error').textContent = '';
-  document.getElementById('perfil-exito').textContent = '';
+  document.getElementById('perfil-nombre').value          = sesion.nombre   || '';
+  document.getElementById('perfil-telefono').textContent  = sesion.telefono || '—';
+  document.getElementById('perfil-email').value           = sesion.email    || '';
+  document.getElementById('perfil-error').textContent     = '';
+  document.getElementById('perfil-exito').textContent     = '';
+  document.getElementById('perfil-nueva-direccion').value = '';
 
-  // Cargar dirección desde Supabase
-  try {
-    const { SUPABASE_URL, SUPABASE_KEY } = await import('./config.js');
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/clientes?id=eq.${sesion.id}&select=ubicacion_texto`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-    );
-    const rows = res.ok ? await res.json() : [];
-    const dir  = rows[0]?.ubicacion_texto;
-    document.getElementById('perfil-direccion').value = dir || '';
-  } catch {
-    document.getElementById('perfil-direccion').value = '';
-  }
-
+  await cargarDireccionesPerfil(sesion.id);
   modal.style.display = 'flex';
 }
+
+async function cargarDireccionesPerfil(clienteId) {
+  const lista = document.getElementById('perfil-lista-direcciones');
+  lista.innerHTML = '<p style="font-size:.82rem;color:#bbb;text-align:center;">Cargando...</p>';
+
+  try {
+    const { obtenerDirecciones } = await import('./db.js');
+    const dirs = await obtenerDirecciones(clienteId);
+
+    if (!dirs || dirs.length === 0) {
+      lista.innerHTML = '<p style="font-size:.82rem;color:#bbb;text-align:center;">No tienes direcciones guardadas</p>';
+      return;
+    }
+
+    lista.innerHTML = dirs.map(d => `
+      <div data-id="${d.id}" style="display:flex;align-items:center;gap:.5rem;padding:.6rem .8rem;background:${d.es_favorita ? '#fdf6ec' : '#f9f5ef'};border-radius:10px;margin-bottom:.5rem;border:1.5px solid ${d.es_favorita ? '#e8c88a' : '#eee'};">
+        <button onclick="toggleFavorita('${d.id}','${clienteId}')" title="${d.es_favorita ? 'Favorita' : 'Marcar como favorita'}"
+          style="background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0;flex-shrink:0;">${d.es_favorita ? '⭐' : '☆'}</button>
+        <span style="flex:1;font-size:.88rem;color:#444;">${d.texto}</span>
+        <button onclick="pedirConfirmarEliminar('${d.id}','${clienteId}','${d.texto.replace(/'/g,"&#39;")}')"
+          style="background:none;border:none;cursor:pointer;color:#c0392b;font-size:.8rem;padding:.2rem .4rem;flex-shrink:0;">✕</button>
+      </div>
+    `).join('');
+  } catch {
+    lista.innerHTML = '<p style="font-size:.82rem;color:#c0392b;text-align:center;">Error al cargar direcciones</p>';
+  }
+}
+
+window.toggleFavorita = async function(id, clienteId) {
+  try {
+    const { marcarFavorita } = await import('./db.js');
+    await marcarFavorita(id, clienteId);
+    await cargarDireccionesPerfil(clienteId);
+  } catch {
+    document.getElementById('perfil-error').textContent = 'Error al actualizar favorita';
+  }
+};
+
+window.pedirConfirmarEliminar = function(id, clienteId, texto) {
+  const modal = document.getElementById('modal-confirmar');
+  document.getElementById('confirmar-mensaje').textContent = '¿Eliminar esta dirección?';
+  document.getElementById('confirmar-detalle').textContent  = texto;
+  modal.style.display = 'flex';
+
+  // Asignar acción al botón confirmar
+  const btnOk = document.getElementById('confirmar-ok');
+  const btnCancelar = document.getElementById('confirmar-cancelar');
+
+  const handler = async () => {
+    modal.style.display = 'none';
+    btnOk.removeEventListener('click', handler);
+    try {
+      const { eliminarDireccion } = await import('./db.js');
+      await eliminarDireccion(id);
+      await cargarDireccionesPerfil(clienteId);
+      document.getElementById('perfil-exito').textContent = 'Dirección eliminada ✓';
+    } catch {
+      document.getElementById('perfil-error').textContent = 'Error al eliminar';
+    }
+  };
+
+  const cancelHandler = () => {
+    modal.style.display = 'none';
+    btnOk.removeEventListener('click', handler);
+    btnCancelar.removeEventListener('click', cancelHandler);
+  };
+
+  btnOk.addEventListener('click', handler);
+  btnCancelar.addEventListener('click', cancelHandler);
+};
 
 async function abrirHistorial() {
   const modal  = document.getElementById('modal-historial');
