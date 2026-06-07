@@ -30,6 +30,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   ubicacion = obtenerUbicacionGuardada();
 
+  // Si el cliente está logueado, cargar su dirección favorita desde BD
+  const sesionInicial = obtenerSesion();
+  if (sesionInicial?.id) {
+    try {
+      const { obtenerDirecciones } = await import('./db.js');
+      const dirs = await obtenerDirecciones(sesionInicial.id);
+      if (dirs && dirs.length > 0) {
+        // La primera es la favorita (order es_favorita.desc)
+        const favorita = dirs[0];
+        ubicacion = {
+          ubicacion_texto: favorita.texto,
+          ubicacion_lat:   favorita.lat  ?? null,
+          ubicacion_lng:   favorita.lng  ?? null,
+        };
+        // Sincronizar localStorage
+        localStorage.setItem(
+          'o300_ubicacion',
+          JSON.stringify(ubicacion)
+        );
+      }
+    } catch {
+      // Si falla, queda la del localStorage
+    }
+  }
+
   // Cargar config y productos en paralelo
   [configApp] = await Promise.all([
     leerConfig(),
@@ -919,7 +944,7 @@ async function cargarDireccionesPerfil(clienteId) {
 
     lista.innerHTML = dirs.map(d => `
       <div data-id="${d.id}" style="display:flex;align-items:center;gap:.5rem;padding:.6rem .8rem;background:${d.es_favorita ? '#fdf6ec' : '#f9f5ef'};border-radius:10px;margin-bottom:.5rem;border:1.5px solid ${d.es_favorita ? '#e8c88a' : '#eee'};">
-        <button onclick="toggleFavorita('${d.id}','${clienteId}')" title="${d.es_favorita ? 'Favorita' : 'Marcar como favorita'}"
+        <button onclick="toggleFavorita('${d.id}','${clienteId}','${d.es_favorita}')" title="${d.es_favorita ? 'Quitar favorita' : 'Marcar como favorita'}"
           style="background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0;flex-shrink:0;">${d.es_favorita ? '⭐' : '☆'}</button>
         <span style="flex:1;font-size:.88rem;color:#444;">${d.texto}</span>
         <button onclick="pedirConfirmarEliminar('${d.id}','${clienteId}','${d.texto.replace(/'/g,"&#39;")}')"
@@ -931,10 +956,10 @@ async function cargarDireccionesPerfil(clienteId) {
   }
 }
 
-window.toggleFavorita = async function(id, clienteId) {
+window.toggleFavorita = async function(id, clienteId, yaEsFavorita) {
   try {
     const { marcarFavorita } = await import('./db.js');
-    await marcarFavorita(id, clienteId);
+    await marcarFavorita(id, clienteId, yaEsFavorita === 'true');
     await cargarDireccionesPerfil(clienteId);
   } catch {
     document.getElementById('perfil-error').textContent = 'Error al actualizar favorita';
