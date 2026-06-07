@@ -101,20 +101,33 @@ export async function guardarDireccion(clienteId, { texto, lat, lng }) {
 }
 
 export async function eliminarDireccion(id) {
-  return query(`direcciones_guardadas?id=eq.${id}`, {
+  const url = `${SUPABASE_URL}/rest/v1/direcciones_guardadas?id=eq.${id}`;
+  const res = await fetch(url, {
     method: 'DELETE',
-    headers: { 'Prefer': 'return=minimal' },
+    headers: {
+      'apikey':        SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Prefer':        'return=minimal',
+    },
   });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Error ${res.status}`);
+  }
+  return true;
 }
 
-export async function marcarFavorita(id, clienteId) {
-  // Quitar favorita a todas del cliente, luego marcar la elegida
+export async function marcarFavorita(id, clienteId, yaEsFavorita) {
+  // Quitar favorita a todas del cliente
   await query(`direcciones_guardadas?cliente_id=eq.${clienteId}`, {
     method: 'PATCH',
     body: JSON.stringify({ es_favorita: false }),
   });
-  return query(`direcciones_guardadas?id=eq.${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ es_favorita: true }),
-  });
+  // Si no era favorita, marcarla; si ya lo era, queda desmarcada (toggle)
+  if (!yaEsFavorita) {
+    return query(`direcciones_guardadas?id=eq.${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ es_favorita: true }),
+    });
+  }
 }
