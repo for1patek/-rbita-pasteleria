@@ -420,6 +420,97 @@ function iniciarAuth() {
     abrirHistorial();
   });
 
+  // Agregar email
+  document.getElementById('btn-agregar-email')?.addEventListener('click', () => {
+    document.getElementById('menu-sesion').style.display = 'none';
+    document.getElementById('input-email-nuevo').value = '';
+    document.getElementById('email-error').textContent = '';
+    document.getElementById('email-exito').textContent = '';
+    document.getElementById('modal-agregar-email').style.display = 'flex';
+  });
+
+  document.getElementById('cerrar-modal-email')?.addEventListener('click', () => {
+    document.getElementById('modal-agregar-email').style.display = 'none';
+  });
+
+  document.getElementById('modal-agregar-email')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-agregar-email')) {
+      document.getElementById('modal-agregar-email').style.display = 'none';
+    }
+  });
+
+  document.getElementById('btn-guardar-email')?.addEventListener('click', async () => {
+    const btn    = document.getElementById('btn-guardar-email');
+    const email  = document.getElementById('input-email-nuevo').value.trim().toLowerCase();
+    const errorEl = document.getElementById('email-error');
+    const exitoEl = document.getElementById('email-exito');
+
+    errorEl.textContent = '';
+    exitoEl.textContent = '';
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errorEl.textContent = 'Email inválido';
+      return;
+    }
+
+    const sesion = obtenerSesion();
+    if (!sesion) return;
+
+    btn.disabled    = true;
+    btn.textContent = 'Guardando...';
+
+    try {
+      const { SUPABASE_URL, SUPABASE_KEY } = await import('./config.js');
+
+      // Verificar duplicado
+      const checkRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/clientes?email=eq.${encodeURIComponent(email)}&select=id&limit=1`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      const rows = checkRes.ok ? await checkRes.json() : [];
+      if (rows.length > 0) {
+        errorEl.textContent = 'Este email ya está registrado en otra cuenta';
+        btn.disabled    = false;
+        btn.textContent = 'Guardar';
+        return;
+      }
+
+      // Actualizar
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/clientes?id=eq.${sesion.id}`,
+        {
+          method:  'PATCH',
+          headers: {
+            apikey:          SUPABASE_KEY,
+            Authorization:   `Bearer ${SUPABASE_KEY}`,
+            'Content-Type':  'application/json',
+            'Prefer':        'return=representation',
+          },
+          body: JSON.stringify({ email, updated_at: new Date().toISOString() }),
+        }
+      );
+
+      if (!res.ok) throw new Error('Error al guardar');
+
+      // Actualizar sesión local
+      const { guardarSesion } = await import('./auth.js');
+      guardarSesion({ ...sesion, email });
+
+      exitoEl.textContent = '¡Email guardado! Ya puedes recuperar tu PIN si lo olvidas.';
+      // Ocultar botón del menú
+      document.getElementById('btn-agregar-email').style.display = 'none';
+      setTimeout(() => {
+        document.getElementById('modal-agregar-email').style.display = 'none';
+      }, 2000);
+
+    } catch {
+      errorEl.textContent = 'Error al guardar el email. Intenta de nuevo.';
+    }
+
+    btn.disabled    = false;
+    btn.textContent = 'Guardar';
+  });
+
   // Cerrar menu al clickear fuera
   document.addEventListener('click', e => {
     const chip = document.getElementById('chip-sesion');
@@ -433,6 +524,7 @@ function iniciarAuth() {
 function actualizarChipSesion() {
   const chip   = document.getElementById('chip-sesion');
   const nombre = document.getElementById('chip-nombre');
+  const btnEmail = document.getElementById('btn-agregar-email');
   const sesion = obtenerSesion();
   if (!chip) return;
   chip.style.display = 'block';
@@ -444,6 +536,10 @@ function actualizarChipSesion() {
   } else {
     nombre.innerHTML = 'Registrarse <span style="background:#c8a97e;color:#1a1a1a;font-size:.7rem;padding:.1rem .4rem;border-radius:4px;margin-left:.3rem;font-weight:bold;">20% OFF</span>';
     chip.title = 'Regístrate y obtén 20% en tu primer pedido';
+  }
+  // Mostrar "Agregar email" solo si está logueado y no tiene email
+  if (btnEmail) {
+    btnEmail.style.display = (sesion && !sesion.email) ? 'block' : 'none';
   }
 }
 
