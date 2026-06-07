@@ -313,11 +313,67 @@
   </div>
   <div id="menu-sesion" style="display:none; position:fixed; top:3rem; right:1rem; z-index:101; background:#fff; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.15); overflow:hidden; min-width:160px;">
     <button id="btn-ver-historial" style="width:100%; padding:.8rem 1rem; border:none; background:none; text-align:left; cursor:pointer; font-family:inherit; font-size:.9rem;">📋 Mis pedidos</button>
+    <button id="btn-ver-perfil" style="width:100%; padding:.8rem 1rem; border:none; background:none; text-align:left; cursor:pointer; font-family:inherit; font-size:.9rem;">👤 Mi perfil</button>
     <button id="btn-agregar-email" style="display:none; width:100%; padding:.8rem 1rem; border:none; background:none; text-align:left; cursor:pointer; font-family:inherit; font-size:.9rem;">📧 Agregar email</button>
     <button id="btn-cerrar-sesion" style="width:100%; padding:.8rem 1rem; border:none; background:none; text-align:left; cursor:pointer; font-family:inherit; font-size:.9rem; color:#c0392b;">Cerrar sesión</button>
   </div>
 
-  <!-- Modal agregar email -->
+  <!-- ── Modal Perfil ── -->
+  <div id="modal-perfil" role="dialog" aria-modal="true" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:200; align-items:center; justify-content:center;">
+    <div style="background:#fffaf3; border-radius:18px; padding:2rem 1.5rem; width:min(92vw,400px); position:relative; max-height:90vh; overflow-y:auto;">
+      <button id="perfil-cerrar" style="position:absolute; top:1rem; right:1rem; background:none; border:none; font-size:1.3rem; cursor:pointer; color:#888;">✕</button>
+      <h3 style="margin:0 0 1.5rem; font-size:1.1rem; color:#3a1a0a;">Mi perfil</h3>
+
+      <!-- Nombre -->
+      <div style="margin-bottom:1.2rem;">
+        <label style="font-size:.78rem; color:#888; display:block; margin-bottom:.3rem;">Nombre</label>
+        <div style="display:flex; gap:.5rem; align-items:center;">
+          <input id="perfil-nombre" type="text" maxlength="60"
+            style="flex:1; padding:.7rem 1rem; border:1.5px solid #ddd; border-radius:10px; font-family:inherit; font-size:.95rem; outline:none; background:#fff; box-sizing:border-box;">
+          <button id="btn-guardar-nombre" style="padding:.7rem 1rem; background:#8B1A2F; color:#fff; border:none; border-radius:10px; font-family:inherit; font-size:.85rem; cursor:pointer; white-space:nowrap;">Guardar</button>
+        </div>
+      </div>
+
+      <!-- Teléfono (solo lectura) -->
+      <div style="margin-bottom:1.2rem;">
+        <label style="font-size:.78rem; color:#888; display:block; margin-bottom:.3rem;">Teléfono</label>
+        <div style="padding:.7rem 1rem; background:#f5f0e8; border-radius:10px; font-size:.95rem; color:#555;" id="perfil-telefono"></div>
+        <p style="font-size:.72rem; color:#bbb; margin:.3rem 0 0 .2rem;">Para cambiar el teléfono contacta al negocio por WhatsApp.</p>
+      </div>
+
+      <!-- Email -->
+      <div style="margin-bottom:1.2rem;">
+        <label style="font-size:.78rem; color:#888; display:block; margin-bottom:.3rem;">Email</label>
+        <div style="display:flex; gap:.5rem; align-items:center;">
+          <input id="perfil-email" type="email" maxlength="120" placeholder="tu@email.com"
+            style="flex:1; padding:.7rem 1rem; border:1.5px solid #ddd; border-radius:10px; font-family:inherit; font-size:.95rem; outline:none; background:#fff; box-sizing:border-box;">
+          <button id="btn-guardar-email-perfil" style="padding:.7rem 1rem; background:#8B1A2F; color:#fff; border:none; border-radius:10px; font-family:inherit; font-size:.85rem; cursor:pointer; white-space:nowrap;">Guardar</button>
+        </div>
+      </div>
+
+      <!-- Dirección guardada -->
+      <div style="margin-bottom:1.5rem;">
+        <label style="font-size:.78rem; color:#888; display:block; margin-bottom:.3rem;">Dirección guardada</label>
+        <input id="perfil-direccion" type="text" maxlength="200" placeholder="Tu dirección de delivery"
+          style="width:100%; padding:.7rem 1rem; border:1.5px solid #ddd; border-radius:10px; font-family:inherit; font-size:.9rem; outline:none; background:#fff; box-sizing:border-box; margin-bottom:.5rem;">
+        <div style="display:flex; gap:.5rem;">
+          <button id="btn-guardar-direccion" style="flex:1; padding:.65rem; background:#8B1A2F; color:#fff; border:none; border-radius:10px; font-family:inherit; font-size:.85rem; cursor:pointer;">Guardar</button>
+          <button id="btn-eliminar-direccion" style="padding:.65rem .9rem; background:none; border:1.5px solid #ddd; border-radius:10px; font-family:inherit; font-size:.85rem; cursor:pointer; color:#c0392b;">Eliminar</button>
+        </div>
+      </div>
+
+      <!-- Cambiar PIN -->
+      <button id="btn-perfil-cambiar-pin"
+        style="width:100%; padding:.8rem; background:none; border:1.5px solid #8B1A2F; color:#8B1A2F; border-radius:10px; font-family:inherit; font-size:.9rem; cursor:pointer;">
+        🔑 Cambiar PIN
+      </button>
+
+      <div id="perfil-error" style="color:#c0392b; font-size:.83rem; text-align:center; margin-top:.8rem; min-height:1.2em;"></div>
+      <div id="perfil-exito" style="color:#2d6a4f; font-size:.83rem; text-align:center; margin-top:.8rem; min-height:1.2em;"></div>
+    </div>
+  </div>
+
+  <!-- Modal agregar email (desde menú) -->
   <div id="modal-agregar-email" role="dialog" aria-modal="true" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:200; align-items:center; justify-content:center;">
     <div style="background:#fffaf3; border-radius:18px; padding:2rem 1.5rem; width:min(92vw,360px); position:relative;">
       <button id="cerrar-modal-email" style="position:absolute; top:1rem; right:1rem; background:none; border:none; font-size:1.3rem; cursor:pointer; color:#888;">✕</button>
