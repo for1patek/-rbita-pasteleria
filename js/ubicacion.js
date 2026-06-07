@@ -39,22 +39,43 @@ export async function coordsADireccion(lat, lng) {
 // ── Guardar ubicación en localStorage y BD ─
 
 export async function guardarUbicacion(deviceId, datos) {
-  // datos: { texto, lat, lng }
-  const limpio = {
-    ubicacion_texto: sanitizar(datos.texto || ''),
-    ubicacion_lat:   datos.lat   ?? null,
-    ubicacion_lng:   datos.lng   ?? null,
-  };
+  // datos: { texto, lat, lng } o { ubicacion_texto, ubicacion_lat, ubicacion_lng }
+  const texto = sanitizar(datos.texto || datos.ubicacion_texto || '');
+  const lat   = datos.lat ?? datos.ubicacion_lat  ?? null;
+  const lng   = datos.lng ?? datos.ubicacion_lng  ?? null;
+
+  const limpio = { ubicacion_texto: texto, ubicacion_lat: lat, ubicacion_lng: lng };
 
   localStorage.setItem(STORAGE_KEYS.ubicacion, JSON.stringify(limpio));
 
   if (deviceId) {
+    // Mantener campo legacy en clientes para compatibilidad con pedidos
     await actualizarCliente(deviceId, limpio).catch(() => {
       console.warn('No se pudo guardar ubicación en BD');
     });
   }
 
   return limpio;
+}
+
+// ── Guardar en tabla direcciones_guardadas ─
+// Llama desde app.js cuando el cliente marca "guardar dirección"
+
+export async function guardarDireccionPermanente(clienteId, datos) {
+  const { guardarDireccion } = await import('./db.js');
+  const texto = sanitizar(datos.texto || datos.ubicacion_texto || '');
+  if (!texto) return null;
+  try {
+    const rows = await guardarDireccion(clienteId, {
+      texto,
+      lat: datos.lat ?? datos.ubicacion_lat ?? null,
+      lng: datos.lng ?? datos.ubicacion_lng ?? null,
+    });
+    return rows?.[0] ?? null;
+  } catch (e) {
+    console.warn('No se pudo guardar dirección permanente:', e);
+    return null;
+  }
 }
 
 // ── Recuperar ubicación guardada ──────────
