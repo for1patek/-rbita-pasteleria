@@ -159,6 +159,10 @@ function iniciarModal() {
       inputNombre.value = sesionActual.nombre;
     }
 
+    // Mostrar checkbox "guardar" solo si está logueado
+    const chkRow = document.querySelector('.chk-row');
+    if (chkRow) chkRow.style.display = sesionActual?.id ? 'flex' : 'none';
+
     modal.classList.add('visible');
     document.body.classList.add('modal-open');
   });
@@ -198,19 +202,55 @@ function iniciarModal() {
 
   // Guardar dirección al marcar checkbox
   chkGuardar?.addEventListener('change', async () => {
-    if (chkGuardar.checked && inputDir?.value.trim()) {
-      ubicacion = { ubicacion_texto: inputDir.value.trim(), ubicacion_lat: null, ubicacion_lng: null };
+    if (!chkGuardar.checked) return;
+    const texto = inputDir?.value.trim();
+    if (!texto) return;
+
+    ubicacion = { ubicacion_texto: texto, ubicacion_lat: null, ubicacion_lng: null };
+
+    const sesionActual = obtenerSesion();
+    if (sesionActual?.id) {
+      // Cliente logueado → guardar en direcciones_guardadas
+      try {
+        const { guardarDireccion } = await import('./db.js');
+        await guardarDireccion(sesionActual.id, { texto });
+      } catch { console.warn('No se pudo guardar dirección en BD'); }
+    } else {
+      // Sin sesión → solo localStorage (legacy)
       await guardarUbicacion(deviceId, ubicacion);
     }
   });
 
-  // Cambiar ubicación guardada
-  document.getElementById('btn-cambiar-ubicacion')?.addEventListener('click', () => {
+  // Cambiar ubicación guardada → mostrar selector si tiene dirs guardadas
+  document.getElementById('btn-cambiar-ubicacion')?.addEventListener('click', async () => {
+    const sesionActual = obtenerSesion();
+    if (sesionActual?.id) {
+      try {
+        const { obtenerDirecciones } = await import('./db.js');
+        const dirs = await obtenerDirecciones(sesionActual.id);
+        if (dirs && dirs.length > 0) {
+          // Mostrar selector
+          const listaEl = document.getElementById('lista-dirs-selector');
+          listaEl.innerHTML = dirs.map(d => `
+            <div onclick="seleccionarDireccionGuardada('${d.texto.replace(/'/g,"&#39;")}', ${d.lat ?? null}, ${d.lng ?? null})"
+              style="padding:.65rem .9rem; background:${d.es_favorita ? '#fdf6ec' : '#f9f5ef'}; border-radius:10px; margin-bottom:.4rem; cursor:pointer; font-size:.9rem; color:#333; border:1.5px solid ${d.es_favorita ? '#e8c88a' : '#eee'}; display:flex; align-items:center; gap:.5rem;">
+              ${d.es_favorita ? '⭐' : '📍'} ${d.texto}
+            </div>
+          `).join('');
+          document.getElementById('ubicacion-guardada').style.display = 'none';
+          document.getElementById('ubicacion-selector').style.display  = 'block';
+          document.getElementById('ubicacion-nueva').style.display     = 'none';
+          return;
+        }
+      } catch { /* cae a nueva dirección */ }
+    }
+    // Sin direcciones guardadas → ir directo a campo de texto
     const textoAnterior = ubicacion?.ubicacion_texto || '';
     limpiarUbicacionGuardada();
     ubicacion = null;
     document.getElementById('ubicacion-guardada').style.display = 'none';
-    document.getElementById('ubicacion-nueva').style.display    = 'block';
+    document.getElementById('ubicacion-selector').style.display  = 'none';
+    document.getElementById('ubicacion-nueva').style.display     = 'block';
     const inputDir = document.getElementById('input-direccion');
     if (inputDir && textoAnterior) inputDir.value = textoAnterior;
   });
@@ -436,6 +476,20 @@ function iniciarAuth() {
 
   document.getElementById('btn-cerrar-sesion')?.addEventListener('click', () => {
     cerrarSesion();
+    // Limpiar datos del cliente del estado local
+    ubicacion = null;
+    limpiarUbicacionGuardada();
+    // Limpiar inputs del modal carrito si están visibles
+    const inputNombre = document.getElementById('input-nombre');
+    const inputDir    = document.getElementById('input-direccion');
+    const chkRow      = document.querySelector('.chk-row');
+    if (inputNombre) inputNombre.value = '';
+    if (inputDir)    inputDir.value    = '';
+    if (chkRow)      chkRow.style.display = 'none';
+    // Resetear vista ubicación
+    document.getElementById('ubicacion-guardada').style.display = 'none';
+    document.getElementById('ubicacion-selector').style.display  = 'none';
+    document.getElementById('ubicacion-nueva').style.display     = 'block';
     actualizarChipSesion();
     document.getElementById('menu-sesion').style.display = 'none';
   });
@@ -541,6 +595,17 @@ function iniciarAuth() {
 
     btn.disabled = false;
     btn.textContent = 'Guardar';
+  });
+
+  // Btn "ingresar otra dirección" desde el selector
+  document.getElementById('btn-nueva-ubicacion')?.addEventListener('click', () => {
+    const textoAnterior = ubicacion?.ubicacion_texto || '';
+    ubicacion = null;
+    document.getElementById('ubicacion-guardada').style.display = 'none';
+    document.getElementById('ubicacion-selector').style.display  = 'none';
+    document.getElementById('ubicacion-nueva').style.display     = 'block';
+    const inputDir = document.getElementById('input-direccion');
+    if (inputDir) inputDir.value = textoAnterior;
   });
 
   // Agregar nueva dirección desde perfil
@@ -956,11 +1021,28 @@ async function cargarDireccionesPerfil(clienteId) {
   }
 }
 
+// Seleccionar dirección desde el selector del carrito
+window.seleccionarDireccionGuardada = function(texto, lat, lng) {
+  ubicacion = { ubicacion_texto: texto, ubicacion_lat: lat, ubicacion_lng: lng };
+  localStorage.setItem('o300_ubicacion', JSON.stringify(ubicacion));
+  document.getElementById('texto-ubicacion-guardada').textContent = texto;
+  document.getElementById('ubicacion-guardada').style.display = 'block';
+  document.getElementById('ubicacion-selector').style.display  = 'none';
+  document.getElementById('ubicacion-nueva').style.display     = 'none';
+};
+
 window.toggleFavorita = async function(id, clienteId, yaEsFavorita) {
   try {
-    const { marcarFavorita } = await import('./db.js');
+    const { marcarFavorita, obtenerDirecciones } = await import('./db.js');
     await marcarFavorita(id, clienteId, yaEsFavorita === 'true');
     await cargarDireccionesPerfil(clienteId);
+    // Recargar ubicacion activa sin F5
+    const dirs = await obtenerDirecciones(clienteId);
+    if (dirs && dirs.length > 0) {
+      const fav = dirs.find(d => d.es_favorita) || dirs[0];
+      ubicacion = { ubicacion_texto: fav.texto, ubicacion_lat: fav.lat ?? null, ubicacion_lng: fav.lng ?? null };
+      localStorage.setItem('o300_ubicacion', JSON.stringify(ubicacion));
+    }
   } catch {
     document.getElementById('perfil-error').textContent = 'Error al actualizar favorita';
   }
