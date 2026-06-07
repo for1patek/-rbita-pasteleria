@@ -11,7 +11,8 @@ import { obtenerUbicacionGuardada, guardarUbicacion, limpiarUbicacionGuardada } 
 import { enviarPedido }            from './pedido.js';
 import { DELIVERY }                from './config.js';
 import { leerConfig, deliveryDisponible, minAHora } from './config-panel.js';
-import { obtenerSesion, cerrarSesion, registrar, login, estaLogueado } from './auth.js';
+import { obtenerSesion, cerrarSesion, registrar, login, estaLogueado,
+         solicitarResetPin, verificarResetPin } from './auth.js';
 
 // ── Estado global ─────────────────────────
 let deviceId      = null;
@@ -453,10 +454,50 @@ function iniciarModalAuth() {
   const errorEl  = document.getElementById('auth-error');
   const exitoEl  = document.getElementById('auth-exito');
 
-  cerrarBtn?.addEventListener('click', () => modal.style.display = 'none');
-  modal?.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+  // ── Helpers de vistas ─────────────────────
+  function mostrarVista(id) {
+    ['auth-vista-principal', 'auth-vista-reset-email', 'auth-vista-reset-codigo']
+      .forEach(v => document.getElementById(v).style.display = v === id ? 'block' : 'none');
+    errorEl.textContent = '';
+    exitoEl.textContent = '';
+  }
 
-  // Tabs
+  function limpiarModal() {
+    // Limpiar todos los inputs del modal
+    ['auth-nombre','auth-email-reg','auth-telefono-reg','auth-pin-reg',
+     'auth-telefono-login','auth-pin-login',
+     'auth-email-reset','auth-codigo-otp','auth-pin-nuevo']
+      .forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+    errorEl.textContent = '';
+    exitoEl.textContent = '';
+    mostrarVista('auth-vista-principal');
+    // Resetear tabs a "registro" activo
+    tabs.forEach(t => {
+      const esRegistro = t.dataset.tab === 'registro';
+      t.classList.toggle('activo', esRegistro);
+      t.style.background = esRegistro ? '#8B1A2F' : '#f0ebe0';
+      t.style.color      = esRegistro ? '#fff'    : '#555';
+    });
+    document.getElementById('tab-registro').style.display = 'block';
+    document.getElementById('tab-login').style.display    = 'none';
+  }
+
+  // ── Cerrar modal ──────────────────────────
+  cerrarBtn?.addEventListener('click', () => {
+    modal.style.display = 'none';
+    limpiarModal();
+  });
+  modal?.addEventListener('click', e => {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+      limpiarModal();
+    }
+  });
+
+  // ── Tabs registro / login ─────────────────
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       tabs.forEach(t => {
@@ -474,50 +515,115 @@ function iniciarModalAuth() {
     });
   });
 
-  // Registro
+  // ── Registro ──────────────────────────────
   document.getElementById('btn-registrar')?.addEventListener('click', async () => {
     const btn    = document.getElementById('btn-registrar');
     const nombre = document.getElementById('auth-nombre').value.trim();
+    const email  = document.getElementById('auth-email-reg').value.trim();
     const tel    = document.getElementById('auth-telefono-reg').value.trim();
     const pin    = document.getElementById('auth-pin-reg').value.trim();
 
     errorEl.textContent = '';
-    btn.disabled = true;
-    btn.textContent = 'Creando cuenta...';
+    btn.disabled        = true;
+    btn.textContent     = 'Creando cuenta...';
 
-    const r = await registrar({ deviceId, telefono: tel, pin, nombre });
+    const r = await registrar({ deviceId, telefono: tel, pin, nombre, email });
 
-    btn.disabled = false;
+    btn.disabled    = false;
     btn.textContent = 'Crear cuenta';
 
     if (r.ok) {
       exitoEl.textContent = `¡Bienvenido/a ${r.cliente.nombre || ''}! Cuenta creada.`;
       actualizarChipSesion();
-      setTimeout(() => modal.style.display = 'none', 1500);
+      setTimeout(() => { modal.style.display = 'none'; limpiarModal(); }, 1500);
     } else {
       errorEl.textContent = r.error;
     }
   });
 
-  // Login
+  // ── Login ─────────────────────────────────
   document.getElementById('btn-login')?.addEventListener('click', async () => {
     const btn = document.getElementById('btn-login');
     const tel = document.getElementById('auth-telefono-login').value.trim();
     const pin = document.getElementById('auth-pin-login').value.trim();
 
     errorEl.textContent = '';
-    btn.disabled = true;
-    btn.textContent = 'Ingresando...';
+    btn.disabled        = true;
+    btn.textContent     = 'Ingresando...';
 
     const r = await login({ telefono: tel, pin });
 
-    btn.disabled = false;
+    btn.disabled    = false;
     btn.textContent = 'Ingresar';
 
     if (r.ok) {
       exitoEl.textContent = `¡Hola ${r.cliente.nombre || ''}!`;
       actualizarChipSesion();
-      setTimeout(() => modal.style.display = 'none', 1200);
+      setTimeout(() => { modal.style.display = 'none'; limpiarModal(); }, 1200);
+    } else {
+      errorEl.textContent = r.error;
+    }
+  });
+
+  // ── Reset PIN — navegación ────────────────
+  document.getElementById('btn-olvide-pin')?.addEventListener('click', () => {
+    mostrarVista('auth-vista-reset-email');
+  });
+
+  document.getElementById('btn-volver-desde-reset')?.addEventListener('click', () => {
+    mostrarVista('auth-vista-principal');
+  });
+
+  document.getElementById('btn-volver-desde-codigo')?.addEventListener('click', () => {
+    mostrarVista('auth-vista-reset-email');
+  });
+
+  // ── Reset PIN — paso 1: enviar código ─────
+  let _resetEmail = '';
+
+  document.getElementById('btn-enviar-codigo')?.addEventListener('click', async () => {
+    const btn   = document.getElementById('btn-enviar-codigo');
+    const email = document.getElementById('auth-email-reset').value.trim();
+
+    errorEl.textContent = '';
+    btn.disabled        = true;
+    btn.textContent     = 'Enviando...';
+
+    const r = await solicitarResetPin(email);
+
+    btn.disabled    = false;
+    btn.textContent = 'Enviar código';
+
+    if (r.ok) {
+      _resetEmail = email;
+      exitoEl.textContent = 'Si ese email está registrado, recibirás el código en breve.';
+      setTimeout(() => {
+        exitoEl.textContent = '';
+        mostrarVista('auth-vista-reset-codigo');
+      }, 2000);
+    } else {
+      errorEl.textContent = r.error;
+    }
+  });
+
+  // ── Reset PIN — paso 2: verificar y cambiar ─
+  document.getElementById('btn-confirmar-reset')?.addEventListener('click', async () => {
+    const btn      = document.getElementById('btn-confirmar-reset');
+    const codigo   = document.getElementById('auth-codigo-otp').value.trim();
+    const nuevoPin = document.getElementById('auth-pin-nuevo').value.trim();
+
+    errorEl.textContent = '';
+    btn.disabled        = true;
+    btn.textContent     = 'Verificando...';
+
+    const r = await verificarResetPin({ email: _resetEmail, codigo, nuevo_pin: nuevoPin });
+
+    btn.disabled    = false;
+    btn.textContent = 'Cambiar PIN';
+
+    if (r.ok) {
+      exitoEl.textContent = '¡PIN cambiado! Ya puedes ingresar con tu nuevo PIN.';
+      setTimeout(() => { limpiarModal(); }, 2200);
     } else {
       errorEl.textContent = r.error;
     }
