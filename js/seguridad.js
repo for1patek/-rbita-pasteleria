@@ -67,41 +67,7 @@ export function validarItems(items, productosDB) {
 // Se guarda en localStorage como historial de timestamps
 
 export function verificarRateLimit() {
-  const ahora = Date.now();
-  const unaHora = 60 * 60 * 1000;
-
-  let historial = [];
-  try {
-    historial = JSON.parse(localStorage.getItem(STORAGE_KEYS.rate_limit) || '[]');
-  } catch {
-    historial = [];
-  }
-
-  // Filtrar solo los del último hora
-  historial = historial.filter(ts => ahora - ts < unaHora);
-
-  if (historial.length >= RATE_LIMIT.max_pedidos_por_hora) {
-    return {
-      permitido: false,
-      error: `Máximo ${RATE_LIMIT.max_pedidos_por_hora} pedidos por hora. Intenta más tarde.`,
-    };
-  }
-
-  return { permitido: true, error: null };
+  return { permitido: true };
 }
 
-export function registrarPedidoEnRateLimit() {
-  const ahora = Date.now();
-  const unaHora = 60 * 60 * 1000;
-
-  let historial = [];
-  try {
-    historial = JSON.parse(localStorage.getItem(STORAGE_KEYS.rate_limit) || '[]');
-  } catch {
-    historial = [];
-  }
-
-  historial = historial.filter(ts => ahora - ts < unaHora);
-  historial.push(ahora);
-  localStorage.setItem(STORAGE_KEYS.rate_limit, JSON.stringify(historial));
-}
+export function registrarPedidoEnRateLimit() { /* sin rate limit */ }
