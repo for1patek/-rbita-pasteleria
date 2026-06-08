@@ -181,14 +181,30 @@ function iniciarModal() {
   });
 
   // Delivery — verificar disponibilidad
-  btnDelivery?.addEventListener('click', () => {
+  btnDelivery?.addEventListener('click', async () => {
     const estado = deliveryDisponible(configApp || {});
-    if (!estado.ok) return; // bloqueado por no-disponible
+    if (!estado.ok) return;
     conDelivery = true;
     btnDelivery.classList.add('activo');
     btnRetiro.classList.remove('activo');
     seccionUbicacion.style.display = 'block';
     document.getElementById('seccion-retiro').style.display = 'none';
+
+    // Si no hay ubicación en memoria, intentar cargar favorita desde BD
+    if (!ubicacion?.ubicacion_texto) {
+      const sesionActual = obtenerSesion();
+      if (sesionActual?.id) {
+        try {
+          const { obtenerDirecciones } = await import('./db.js');
+          const dirs = await obtenerDirecciones(sesionActual.id);
+          if (dirs && dirs.length > 0) {
+            const fav = dirs.find(d => d.es_favorita) || dirs[0];
+            ubicacion = { ubicacion_texto: fav.texto, ubicacion_lat: fav.lat ?? null, ubicacion_lng: fav.lng ?? null };
+          }
+        } catch { /* sin dirección */ }
+      }
+    }
+
     if (ubicacion?.ubicacion_texto) mostrarUbicacionGuardada();
     actualizarTotalModal();
   });
@@ -397,6 +413,7 @@ function mostrarBannerRegistro() {
   if (!sesion?.telefono) {
     banner.style.display = 'block';
     banner.onclick = () => {
+      if (obtenerSesion()) return; // ya está logueado, no abrir auth
       cerrarModal();
       setTimeout(() => {
         const modal = document.getElementById('modal-auth');
@@ -418,8 +435,27 @@ async function enviar(canal) {
 
   const inputNombre   = document.getElementById('input-nombre');
   const nombreCliente = inputNombre?.value?.trim() || '';
-  const resumen       = obtenerResumen();
-  const btnEnviar     = document.getElementById(canal === 'whatsapp' ? 'btn-enviar-wsp' : 'btn-enviar-ig');
+  const msg           = document.getElementById('modal-msg');
+
+  // Dirección obligatoria en delivery
+  if (conDelivery && !ubicacion?.ubicacion_texto) {
+    if (msg) { msg.textContent = 'Ingresa tu dirección de entrega para continuar.'; msg.style.display = 'block'; setTimeout(() => { msg.style.display = 'none'; }, 3500); }
+    // Enfocar el campo
+    const inputDir = document.getElementById('input-direccion');
+    if (inputDir) { inputDir.focus(); inputDir.style.borderColor = '#c0392b'; setTimeout(() => inputDir.style.borderColor = '#ddd', 3000); }
+    return;
+  }
+
+  // Nombre obligatorio siempre
+  if (!nombreCliente) {
+    if (msg) { msg.textContent = 'Ingresa tu nombre para que sepamos quién hace el pedido.'; msg.style.display = 'block'; setTimeout(() => { msg.style.display = 'none'; }, 3500); }
+    const inputN = document.getElementById('input-nombre');
+    if (inputN) { inputN.focus(); inputN.style.borderColor = '#c0392b'; setTimeout(() => inputN.style.borderColor = '#ddd', 3000); }
+    return;
+  }
+
+  const resumen   = obtenerResumen();
+  const btnEnviar = document.getElementById(canal === 'whatsapp' ? 'btn-enviar-wsp' : 'btn-enviar-ig');
 
   btnEnviar.disabled    = true;
   btnEnviar.textContent = 'Enviando...';
@@ -963,6 +999,7 @@ function iniciarModalAuth() {
 export function mostrarPromptRegistro() {
   const sesion = obtenerSesion();
   if (sesion?.telefono) return; // ya está registrado
+  if (obtenerSesion()) return;  // sesión activa, no interrumpir
 
   setTimeout(() => {
     const modal = document.getElementById('modal-auth');
