@@ -209,11 +209,56 @@ function iniciarModal() {
     actualizarTotalModal();
   });
 
-  // Campo de dirección — actualiza ubicacion en tiempo real
+  // Campo de dirección — actualiza ubicacion en tiempo real + autocompletado
   const inputDir = document.getElementById('input-direccion');
+
+  // Crear datalist para autocompletado
+  const datalist = document.createElement('datalist');
+  datalist.id = 'sugerencias-direccion';
+  document.body.appendChild(datalist);
+  if (inputDir) inputDir.setAttribute('list', 'sugerencias-direccion');
+
+  async function cargarSugerenciasDireccion() {
+    const opciones = new Set();
+
+    // 1. Direcciones guardadas en BD (si está logueado)
+    const sesionActual = obtenerSesion();
+    if (sesionActual?.id) {
+      try {
+        const { obtenerDirecciones } = await import('./db.js');
+        const dirs = await obtenerDirecciones(sesionActual.id);
+        dirs?.forEach(d => opciones.add(d.texto));
+      } catch { /* sin dirs */ }
+    }
+
+    // 2. Historial de direcciones escritas (localStorage)
+    try {
+      const hist = JSON.parse(localStorage.getItem('o300_dir_historial') || '[]');
+      hist.forEach(d => opciones.add(d));
+    } catch { /* sin historial */ }
+
+    // Llenar datalist
+    datalist.innerHTML = [...opciones]
+      .map(d => `<option value="${d.replace(/"/g,'&quot;')}">`)
+      .join('');
+  }
+
+  inputDir?.addEventListener('focus', cargarSugerenciasDireccion);
+
   inputDir?.addEventListener('input', () => {
     const texto = inputDir.value.trim();
     ubicacion = texto ? { ubicacion_texto: texto, ubicacion_lat: null, ubicacion_lng: null } : null;
+  });
+
+  // Guardar en historial al confirmar (blur o selección)
+  inputDir?.addEventListener('change', () => {
+    const texto = inputDir.value.trim();
+    if (!texto) return;
+    try {
+      const hist = JSON.parse(localStorage.getItem('o300_dir_historial') || '[]');
+      const nuevo = [texto, ...hist.filter(d => d !== texto)].slice(0, 10);
+      localStorage.setItem('o300_dir_historial', JSON.stringify(nuevo));
+    } catch { /* ignorar */ }
   });
 
   // Guardar dirección al marcar checkbox
@@ -483,7 +528,7 @@ async function enviar(canal) {
     btnEnviar.textContent = canal === 'whatsapp' ? 'WhatsApp' : 'Instagram';
     vaciar();
     cerrarModal();
-    mostrarPromptRegistro();
+    if (conDelivery) mostrarPromptRegistro(); // solo en delivery tiene sentido registrarse
   } catch (e) {
     alert(`Error al enviar pedido: ${e.message}`);
     btnEnviar.disabled    = false;
