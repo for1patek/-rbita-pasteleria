@@ -177,10 +177,16 @@
           <div class="ubicacion-guardada-texto" id="texto-ubicacion-guardada"></div>
           <button class="btn-link" id="btn-cambiar-ubicacion">Cambiar ubicación</button>
         </div>
-        <!-- Si no tiene o quiere cambiar -->
+        <!-- Selector de direcciones guardadas -->
+        <div id="ubicacion-selector" style="display:none;">
+          <div class="modal-seccion-label">Selecciona una dirección</div>
+          <div id="lista-dirs-selector" style="margin-bottom:.6rem;"></div>
+          <button class="btn-link" id="btn-nueva-ubicacion">+ Ingresar otra dirección</button>
+        </div>
+        <!-- Si no tiene o quiere ingresar nueva -->
         <div id="ubicacion-nueva">
-          <div class="modal-seccion-label">Tu dirección (opcional)</div>
-          <input type="text" id="input-direccion" placeholder="Ej: Calle Los Aromos 45" maxlength="100"
+          <div class="modal-seccion-label">Tu dirección</div>
+          <input type="text" id="input-direccion" placeholder="Ej: Calle Los Aromos 45 (requerido en delivery)" maxlength="100"
             style="width:100%; padding:.7rem .9rem; border:1.5px solid #ddd; border-radius:10px; font-family:inherit; font-size:.92rem; outline:none; background:#fff; margin-bottom:.5rem;">
           <div style="font-size:.78rem;color:#999;margin-bottom:.6rem;">📦 Se envía junto al pedido para facilitar la entrega</div>
           <label class="chk-row">
@@ -193,7 +199,7 @@
       <!-- Nombre opcional -->
       <div class="modal-nombre-wrap">
         <div class="modal-seccion-label">Tu nombre (opcional)</div>
-        <input type="text" id="input-nombre" placeholder="¿Cómo te llamas?">
+        <input type="text" id="input-nombre" placeholder="¿Cómo te llamas?" required>
       </div>
 
       <!-- Canal de envío -->
@@ -233,10 +239,9 @@
         <!-- Beneficios -->
         <div id="auth-beneficios" style="background:#fdf6ec; border-radius:10px; padding:.9rem 1rem; margin-bottom:1.2rem; font-size:.82rem; color:#7a4a1e; line-height:1.7;">
           ✓ 20% de descuento en tu primer pedido 🎉<br>
-          ✓ Descuentos y promociones futuras<br>
-          ✓ Dirección guardada para los próximos pedidos<br>
-          ✓ Historial de tus pedidos<br>
-          ✓ Tu nombre ya aparece al pedir
+          ✓ Descuentos y promociones exclusivas<br>
+          ✓ Tus direcciones guardadas para pedir más rápido<br>
+          ✓ Historial de tus pedidos
         </div>
 
         <!-- Form Registro -->
