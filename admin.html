@@ -841,7 +841,11 @@
     const prods = await cargarProductosParaPromo();
     const sel = document.getElementById('desc-producto');
     sel.innerHTML = '<option value="">Selecciona un producto...</option>' +
-      prods.map(p => `<option value="${p.id}" data-precio="${p.precio}" ${item?.productos_ids?.[0] === p.id ? 'selected' : ''}>${p.nombre} — $${p.precio.toLocaleString('es-CL')}</option>`).join('');
+      prods.map(p => {
+        const variante  = p.variante  ? ` (${p.variante})`  : '';
+        const categoria = p.categoria ? ` [${p.categoria}]` : '';
+        return `<option value="${p.id}" data-precio="${p.precio}" ${item?.productos_ids?.[0] === p.id ? 'selected' : ''}>${p.nombre}${variante}${categoria} — $${p.precio.toLocaleString('es-CL')}</option>`;
+      }).join('');
 
     document.getElementById('form-descuento').style.display = 'block';
     document.getElementById('form-descuento').scrollIntoView({ behavior: 'smooth' });
@@ -1015,12 +1019,15 @@
     // Cargar productos con checkboxes
     const productos = await cargarProductosParaPromo();
     const seleccionados = promo?.productos_ids ?? [];
-    document.getElementById('promo-productos-lista').innerHTML = productos.map(p => `
+    document.getElementById('promo-productos-lista').innerHTML = productos.map(p => {
+      const variante  = p.variante  ? ` (${p.variante})`  : '';
+      const categoria = p.categoria ? ` [${p.categoria}]` : '';
+      return `
       <label style="display:flex;align-items:center;gap:.6rem;padding:.4rem .3rem;cursor:pointer;font-size:.88rem;">
         <input type="checkbox" value="${p.id}" ${seleccionados.includes(p.id) ? 'checked' : ''} style="accent-color:var(--primary);">
-        ${p.nombre} <span style="color:var(--muted);font-size:.78rem;">$${p.precio.toLocaleString('es-CL')}</span>
-      </label>
-    `).join('');
+        ${p.nombre}${variante}${categoria} <span style="color:var(--muted);font-size:.78rem;">$${p.precio.toLocaleString('es-CL')}</span>
+      </label>`;
+    }).join('');
 
     document.getElementById('form-promo').style.display = 'block';
     document.getElementById('form-promo').scrollIntoView({ behavior: 'smooth' });
