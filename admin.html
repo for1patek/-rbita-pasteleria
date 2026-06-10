@@ -158,6 +158,7 @@
     <button class="tab-btn" data-tab="pedidos">Pedidos hoy</button>
     <button class="tab-btn" data-tab="clientes">Clientes</button>
     <button class="tab-btn" data-tab="rendimiento">Rendimiento</button>
+    <button class="tab-btn" data-tab="descuentos">Descuentos</button>
     <button class="tab-btn" data-tab="promociones">Promociones</button>
   </div>
 
@@ -258,14 +259,69 @@
 
   <!-- ── RENDIMIENTO ── -->
   <!-- ── TAB PROMOCIONES ── -->
+  <!-- ── TAB DESCUENTOS ── -->
+  <div class="tab-section" id="tab-descuentos">
+    <div class="card">
+      <div class="card-title">Descuentos activos</div>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem;">Descuento simple sobre un producto: % de rebaja o precio especial.</p>
+      <div id="lista-descuentos" style="margin-bottom:1.2rem;min-height:2rem;"></div>
+      <button id="btn-nuevo-descuento" style="width:100%;padding:.75rem;background:var(--primary);color:#1a1a1a;border:none;border-radius:10px;font-family:var(--font);font-size:.9rem;font-weight:bold;cursor:pointer;">+ Nuevo descuento</button>
+    </div>
+
+    <div class="card" id="form-descuento" style="display:none;">
+      <div class="card-title" id="form-descuento-titulo">Nuevo descuento</div>
+
+      <div style="margin-bottom:.9rem;">
+        <div class="field-label">Producto</div>
+        <select id="desc-producto" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;">
+          <option value="">Selecciona un producto...</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:.9rem;">
+        <div class="field-label">Tipo</div>
+        <select id="desc-tipo" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;">
+          <option value="descuento_pct">% de descuento — Ej: 15% off</option>
+          <option value="precio_fijo">Precio especial — Ej: $1.200 (antes $1.500)</option>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:.9rem;">
+        <div>
+          <div class="field-label" id="desc-label-valor">Descuento (%)</div>
+          <input id="desc-valor" type="number" min="1" placeholder="Ej: 15"
+            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;box-sizing:border-box;">
+        </div>
+        <div id="desc-row-original">
+          <div class="field-label">Precio original (tachado)</div>
+          <input id="desc-precio-original" type="number" min="0" placeholder="Automático"
+            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;box-sizing:border-box;">
+        </div>
+      </div>
+
+      <div style="margin-bottom:1.2rem;">
+        <div class="field-label">Fecha de vencimiento (opcional)</div>
+        <input id="desc-fecha-fin" type="date"
+          style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;">
+      </div>
+
+      <div style="display:flex;gap:.6rem;">
+        <button id="btn-guardar-descuento" style="flex:1;padding:.75rem;background:var(--primary);color:#1a1a1a;border:none;border-radius:10px;font-family:var(--font);font-size:.9rem;font-weight:bold;cursor:pointer;">Guardar</button>
+        <button id="btn-cancelar-descuento" style="padding:.75rem 1rem;background:none;border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:var(--font);font-size:.9rem;cursor:pointer;">Cancelar</button>
+      </div>
+      <div id="desc-error" style="color:var(--danger);font-size:.82rem;text-align:center;margin-top:.7rem;min-height:1em;"></div>
+    </div>
+  </div>
+
+  <!-- ── TAB PROMOCIONES ── -->
   <div class="tab-section" id="tab-promociones">
     <div class="card">
       <div class="card-title">Promociones activas</div>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem;">Combos, cantidades especiales y packs. Ej: Docena $5.990 · Pie+Brownie $3.500 · 2x1 alfajor.</p>
       <div id="lista-promociones" style="margin-bottom:1.2rem;min-height:2rem;"></div>
       <button id="btn-nueva-promo" style="width:100%;padding:.75rem;background:var(--primary);color:#1a1a1a;border:none;border-radius:10px;font-family:var(--font);font-size:.9rem;font-weight:bold;cursor:pointer;">+ Nueva promoción</button>
     </div>
 
-    <!-- Formulario nueva/editar promo -->
     <div class="card" id="form-promo" style="display:none;">
       <div class="card-title" id="form-promo-titulo">Nueva promoción</div>
 
@@ -282,33 +338,25 @@
       </div>
 
       <div style="margin-bottom:.9rem;">
-        <div class="field-label">Tipo de promoción</div>
-        <select id="promo-tipo" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;">
-          <option value="descuento_pct">% de descuento en producto</option>
-          <option value="precio_fijo">Precio fijo (producto, bundle o cantidad)</option>
-        </select>
-      </div>
-
-      <div style="margin-bottom:.9rem;">
-        <div class="field-label">Productos incluidos</div>
+        <div class="field-label">Productos del pack</div>
         <div id="promo-productos-lista" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:.5rem;margin-bottom:.3rem;"></div>
-        <div style="font-size:.75rem;color:var(--muted);">Selecciona uno o más productos</div>
+        <div style="font-size:.75rem;color:var(--muted);">Selecciona uno o más productos del pack</div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:.9rem;">
         <div>
-          <div class="field-label" id="label-valor">Descuento (%)</div>
-          <input id="promo-valor" type="number" min="1" placeholder="Ej: 15"
-            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;">
+          <div class="field-label">Precio del pack ($)</div>
+          <input id="promo-valor" type="number" min="1" placeholder="Ej: 5990"
+            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;box-sizing:border-box;">
         </div>
         <div>
-          <div class="field-label">Cantidad (u por producto)</div>
+          <div class="field-label">Cantidad por producto</div>
           <input id="promo-cantidad" type="number" min="1" value="1"
-            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;">
+            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;box-sizing:border-box;">
         </div>
       </div>
 
-      <div style="margin-bottom:.9rem;" id="row-precio-original">
+      <div style="margin-bottom:.9rem;">
         <div class="field-label">Precio original (para mostrar tachado, opcional)</div>
         <input id="promo-precio-original" type="number" min="0" placeholder="Ej: 8000"
           style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;">
@@ -434,6 +482,7 @@
       if (btn.dataset.tab === 'pedidos')      cargarPedidos();
       if (btn.dataset.tab === 'clientes')     cargarClientes();
       if (btn.dataset.tab === 'rendimiento')  cargarRendimiento('dia');
+      if (btn.dataset.tab === 'descuentos')    cargarDescuentosAdmin();
       if (btn.dataset.tab === 'promociones')   cargarPromocionesAdmin();
     });
   });
@@ -728,6 +777,170 @@
     return hoy.toISOString().slice(0,10)+'T00:00:00';
   }
 
+  // ── DESCUENTOS ───────────────────────────
+
+  let descEditandoId = null;
+
+  async function cargarDescuentosAdmin() {
+    const lista = document.getElementById('lista-descuentos');
+    lista.innerHTML = '<div style="color:var(--muted);font-size:.85rem;">Cargando...</div>';
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/promociones?select=*&or=(tipo.eq.descuento_pct,tipo.eq.precio_fijo)&order=created_at.desc`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      const items = res.ok ? await res.json() : [];
+      // Solo los de 1 producto y cantidad 1 (descuentos simples)
+      const descuentos = items.filter(d => d.productos_ids?.length === 1 && d.cantidad === 1);
+
+      if (descuentos.length === 0) {
+        lista.innerHTML = '<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:1rem;">Sin descuentos creados</div>';
+        return;
+      }
+
+      // Obtener nombres de productos
+      const prods = await cargarProductosParaPromo();
+      const nombreProd = id => prods.find(p => p.id === id)?.nombre ?? id;
+
+      lista.innerHTML = descuentos.map(d => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.7rem .9rem;background:var(--bg);border-radius:10px;margin-bottom:.5rem;border:1px solid var(--border);">
+          <div>
+            <div style="font-size:.9rem;font-weight:600;">${nombreProd(d.productos_ids[0])}</div>
+            <div style="font-size:.75rem;color:var(--muted);">
+              ${d.tipo === 'descuento_pct' ? `-${d.valor}%` : `Precio especial $${d.valor.toLocaleString('es-CL')}`}
+              ${d.precio_original ? ` · antes $${d.precio_original.toLocaleString('es-CL')}` : ''}
+              ${d.fecha_fin ? ` · hasta ${new Date(d.fecha_fin).toLocaleDateString('es-CL')}` : ''}
+            </div>
+          </div>
+          <div style="display:flex;gap:.5rem;align-items:center;">
+            <label class="toggle">
+              <input type="checkbox" ${d.activa ? 'checked' : ''} onchange="toggleDescuento('${d.id}', this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <button onclick="editarDescuento('${d.id}')" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:.3rem .6rem;font-size:.75rem;cursor:pointer;font-family:var(--font);">Editar</button>
+            <button onclick="eliminarDescuento('${d.id}','${nombreProd(d.productos_ids[0]).replace(/'/g,"&#39;")}')" style="background:none;border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:.3rem .6rem;font-size:.75rem;cursor:pointer;font-family:var(--font);">✕</button>
+          </div>
+        </div>
+      `).join('');
+    } catch(e) {
+      lista.innerHTML = `<div style="color:var(--danger);font-size:.85rem;">${e.message}</div>`;
+    }
+  }
+
+  async function abrirFormDescuento(item = null) {
+    descEditandoId = item?.id ?? null;
+    document.getElementById('form-descuento-titulo').textContent = item ? 'Editar descuento' : 'Nuevo descuento';
+    document.getElementById('desc-tipo').value            = item?.tipo ?? 'descuento_pct';
+    document.getElementById('desc-valor').value           = item?.valor ?? '';
+    document.getElementById('desc-precio-original').value = item?.precio_original ?? '';
+    document.getElementById('desc-fecha-fin').value       = item?.fecha_fin ? item.fecha_fin.slice(0,10) : '';
+    document.getElementById('desc-error').textContent     = '';
+    actualizarLabelDescuento();
+
+    // Cargar selector de productos
+    const prods = await cargarProductosParaPromo();
+    const sel = document.getElementById('desc-producto');
+    sel.innerHTML = '<option value="">Selecciona un producto...</option>' +
+      prods.map(p => `<option value="${p.id}" data-precio="${p.precio}" ${item?.productos_ids?.[0] === p.id ? 'selected' : ''}>${p.nombre} — $${p.precio.toLocaleString('es-CL')}</option>`).join('');
+
+    document.getElementById('form-descuento').style.display = 'block';
+    document.getElementById('form-descuento').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function actualizarLabelDescuento() {
+    const tipo = document.getElementById('desc-tipo').value;
+    document.getElementById('desc-label-valor').textContent = tipo === 'descuento_pct' ? 'Descuento (%)' : 'Precio especial ($)';
+    document.getElementById('desc-row-original').style.display = tipo === 'precio_fijo' ? 'block' : 'none';
+  }
+
+  document.getElementById('desc-tipo')?.addEventListener('change', actualizarLabelDescuento);
+
+  document.getElementById('btn-nuevo-descuento')?.addEventListener('click', () => abrirFormDescuento());
+  document.getElementById('btn-cancelar-descuento')?.addEventListener('click', () => {
+    document.getElementById('form-descuento').style.display = 'none';
+    descEditandoId = null;
+  });
+
+  document.getElementById('btn-guardar-descuento')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-guardar-descuento');
+    const errorEl = document.getElementById('desc-error');
+    errorEl.textContent = '';
+
+    const productoId = document.getElementById('desc-producto').value;
+    const tipo       = document.getElementById('desc-tipo').value;
+    const valor      = parseInt(document.getElementById('desc-valor').value);
+    const fechaFin   = document.getElementById('desc-fecha-fin').value || null;
+    const sel        = document.getElementById('desc-producto');
+    const precioBase = parseInt(sel.options[sel.selectedIndex]?.dataset?.precio || '0');
+    const precioOrigInput = parseInt(document.getElementById('desc-precio-original').value) || null;
+    const precioOriginal  = tipo === 'precio_fijo' ? (precioOrigInput ?? precioBase) : precioBase || null;
+    const nombre = sel.options[sel.selectedIndex]?.text?.split(' —')[0] || '';
+
+    if (!productoId)      { errorEl.textContent = 'Selecciona un producto'; return; }
+    if (!valor || valor <= 0) { errorEl.textContent = 'Ingresa un valor válido'; return; }
+    if (tipo === 'descuento_pct' && valor > 100) { errorEl.textContent = 'El descuento no puede superar 100%'; return; }
+
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
+    const payload = {
+      nombre, tipo, valor, cantidad: 1,
+      productos_ids: [productoId],
+      precio_original: precioOriginal,
+      fecha_fin: fechaFin ? new Date(fechaFin + 'T23:59:00').toISOString() : null,
+      descripcion: null,
+      updated_at: new Date().toISOString(),
+    };
+
+    try {
+      let res;
+      if (descEditandoId) {
+        res = await fetch(`${SUPABASE_URL}/rest/v1/promociones?id=eq.${descEditandoId}`, {
+          method: 'PATCH',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch(`${SUPABASE_URL}/rest/v1/promociones`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ ...payload, activa: true }),
+        });
+      }
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      document.getElementById('form-descuento').style.display = 'none';
+      descEditandoId = null;
+      cargarDescuentosAdmin();
+    } catch(e) { errorEl.textContent = e.message; }
+
+    btn.disabled = false; btn.textContent = 'Guardar';
+  });
+
+  window.toggleDescuento = async function(id, activa) {
+    await fetch(`${SUPABASE_URL}/rest/v1/promociones?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ activa, updated_at: new Date().toISOString() }),
+    }).catch(() => {});
+    cargarDescuentosAdmin();
+  };
+
+  window.editarDescuento = async function(id) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/promociones?id=eq.${id}&select=*`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    const rows = res.ok ? await res.json() : [];
+    if (rows[0]) abrirFormDescuento(rows[0]);
+  };
+
+  window.eliminarDescuento = async function(id, nombre) {
+    if (!confirm(`¿Eliminar el descuento de "${nombre}"?`)) return;
+    await fetch(`${SUPABASE_URL}/rest/v1/promociones?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+    }).catch(() => {});
+    cargarDescuentosAdmin();
+  };
+
   // ── PROMOCIONES ──────────────────────────
 
   let productosCachePromo = [];
@@ -830,7 +1043,7 @@
     errorEl.textContent = '';
 
     const nombre   = document.getElementById('promo-nombre').value.trim();
-    const tipo     = document.getElementById('promo-tipo').value;
+    const tipo     = 'precio_fijo'; // promociones siempre son precio fijo
     const valor    = parseInt(document.getElementById('promo-valor').value);
     const cantidad = parseInt(document.getElementById('promo-cantidad').value) || 1;
     const precioOriginal = parseInt(document.getElementById('promo-precio-original').value) || null;
