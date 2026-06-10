@@ -4,7 +4,7 @@
 
 import { iniciarSlider }           from './slider.js';
 import { cargarProductos, renderizarMenu, productosDB } from './productos.js';
-import { alCambiar, obtenerResumen, estaVacio, vaciar, calcularDelivery, calcularDescuento } from './carrito.js';
+import { alCambiar, obtenerResumen, estaVacio, vaciar, calcularDelivery, calcularDescuento, agregar as agregarAlCarrito } from './carrito.js';
 import { obtenerDeviceId }         from './seguridad.js';
 import { obtenerOCrearCliente }    from './db.js';
 import { obtenerUbicacionGuardada, guardarUbicacion, limpiarUbicacionGuardada } from './ubicacion.js';
@@ -959,19 +959,14 @@ function renderizarBundles(promos) {
 }
 
 function agregarBundleAlCarrito(bundle) {
-  // Agregar como ítem especial al carrito
-  const { agregar } = window._carritoAPI || {};
-  if (agregar) {
-    agregar({
-      id:     `bundle_${bundle.id}`,
-      nombre: bundle.nombre + (bundle.cantidad > 1 ? ` (${bundle.cantidad}u)` : ''),
-      precio: bundle.valor,
-      esBundle: true,
-    });
-  } else {
-    // Fallback: agregar via evento
-    document.dispatchEvent(new CustomEvent('agregar-bundle', { detail: bundle }));
-  }
+  agregarAlCarrito({
+    id:       `bundle_${bundle.id}`,
+    nombre:   bundle.nombre + (bundle.cantidad > 1 ? ` (${bundle.cantidad}u)` : ''),
+    precio:   bundle.valor,
+    cantidad: 1,
+    esBundle: true,
+  });
+  actualizarBotonFlotante();
 }
 
 function actualizarChipSesion() {
