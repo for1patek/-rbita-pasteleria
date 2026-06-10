@@ -63,7 +63,8 @@ function renderizarItems(items, contenedor) {
   for (const producto of items) {
     const div = document.createElement('div');
     div.className = 'item item-clickable item-card';
-    div.dataset.id = producto.id;
+    div.dataset.id     = producto.id;
+    div.dataset.precio = producto.precio;
 
     const izq = document.createElement('div');
     izq.className = 'item-left';
