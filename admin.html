@@ -7,8 +7,8 @@
   <link rel="icon" type="image/png" href="https://i.ibb.co/nqkMR2b8/Logo-rbita-300-removebg-preview.png">
   <style>
     :root {
-      --bg:#1a1a1a; --card:#242424; --border:#333; --primary:#c8a97e;
-      --danger:#e05555; --success:#5aab6e; --text:#f0ece4; --muted:#888;
+      --bg:#0a0a0a; --card:#111; --border:#222; --primary:#4cbe5a;
+      --danger:#e05555; --success:#4cbe5a; --text:#f0f0f0; --muted:#666;
       --font:'Georgia',serif;
     }
     *{box-sizing:border-box;margin:0;padding:0}
@@ -730,7 +730,7 @@
 
   // ── PROMOCIONES ──────────────────────────
 
-  let productosCache = [];
+  let productosCachePromo = [];
   let promoEditandoId = null;
 
   async function cargarPromocionesAdmin() {
@@ -776,12 +776,12 @@
   }
 
   async function cargarProductosParaPromo() {
-    if (productosCache.length > 0) return productosCache;
+    if (productosCachePromo.length > 0) return productosCachePromo;
     const res = await fetch(`${SUPABASE_URL}/rest/v1/productos?negocio=eq.pasteleria&activo=eq.true&select=id,nombre,precio&order=nombre.asc`, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
     });
-    productosCache = res.ok ? await res.json() : [];
-    return productosCache;
+    productosCachePromo = res.ok ? await res.json() : [];
+    return productosCachePromo;
   }
 
   async function abrirFormPromo(promo = null) {
