@@ -38,7 +38,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Cargar promociones para clientes logueados
     cargarPromociones().then(p => {
       promociones = p;
-      if (p.length > 0) renderizarBannerPromos(p);
+      if (p.length > 0) {
+        // Esperar a que el menú esté renderizado
+        const aplicar = () => {
+          const cards = document.querySelectorAll('.item[data-id]');
+          if (cards.length > 0) renderizarBannerPromos(p);
+          else setTimeout(aplicar, 200);
+        };
+        aplicar();
+      }
     }).catch(() => {});
     try {
       const { obtenerDirecciones } = await import('./db.js');
@@ -65,7 +73,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Cargar config y productos en paralelo
   [configApp] = await Promise.all([
     leerConfig(),
-    cargarProductos('pasteleria').then(renderizarMenu).catch(() => {
+    cargarProductos('pasteleria').then(prods => {
+      renderizarMenu(prods);
+      // Aplicar promos al menú después de que las cards estén en el DOM
+      if (promociones.length > 0) aplicarPromosAlMenu(promociones);
+    }).catch(() => {
       document.getElementById('menu-productos').innerHTML =
         '<p class="error-msg">No se pudo cargar el menú. Intenta recargar la página.</p>';
     }),
