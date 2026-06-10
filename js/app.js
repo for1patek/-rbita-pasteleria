@@ -11,6 +11,7 @@ import { obtenerUbicacionGuardada, guardarUbicacion, limpiarUbicacionGuardada } 
 import { enviarPedido }            from './pedido.js';
 import { DELIVERY }                from './config.js';
 import { leerConfig, deliveryDisponible, minAHora } from './config-panel.js';
+import { cargarPromociones, promoParaProducto, precioConPromo, obtenerBundles, fmtCLP as fmtPromo } from './promociones.js';
 import { obtenerSesion, cerrarSesion, registrar, login, estaLogueado,
          solicitarResetPin, verificarResetPin } from './auth.js';
 
@@ -20,6 +21,7 @@ let ubicacion     = null;
 let conDelivery   = null; // null=sin elegir, false=retiro, true=delivery
 let configApp     = null;
 let descuentoPct  = 0;    // % leído desde config_pasteleria
+let promociones   = [];   // promos activas, solo para clientes logueados
 let esPrimerPedido = false; // se verifica al abrir el modal
 
 // ── Inicializar ───────────────────────────
@@ -33,6 +35,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Si el cliente está logueado, cargar su dirección favorita desde BD
   const sesionInicial = obtenerSesion();
   if (sesionInicial?.id) {
+    // Cargar promociones para clientes logueados
+    cargarPromociones().then(p => {
+      promociones = p;
+      if (p.length > 0) renderizarBannerPromos(p);
+    }).catch(() => {});
     try {
       const { obtenerDirecciones } = await import('./db.js');
       const dirs = await obtenerDirecciones(sesionInicial.id);
@@ -559,7 +566,16 @@ function iniciarAuth() {
     cerrarSesion();
     // Limpiar datos del cliente del estado local
     ubicacion = null;
+    promociones = [];
     limpiarUbicacionGuardada();
+    // Limpiar badges y precios con promo del menú
+    document.querySelectorAll('.badge-promo').forEach(b => b.remove());
+    document.querySelectorAll('[data-promo-aplicada]').forEach(el => {
+      el.removeAttribute('data-promo-aplicada');
+      const precio = parseInt(el.closest('[data-precio]')?.dataset.precio || '0');
+      if (precio) el.textContent = `$${precio.toLocaleString('es-CL')}`;
+    });
+    document.getElementById('seccion-ofertas')?.remove();
     // Limpiar inputs del modal carrito si están visibles
     const inputNombre = document.getElementById('input-nombre');
     const inputDir    = document.getElementById('input-direccion');
@@ -834,6 +850,118 @@ function iniciarAuth() {
   });
 }
 
+// ── Promociones ──────────────────────────
+
+function renderizarBannerPromos(promos) {
+  if (!promos || promos.length === 0) return;
+  // Aplicar badges en las cards del menú
+  aplicarPromosAlMenu(promos);
+  // Renderizar sección de bundles
+  renderizarBundles(promos);
+}
+
+function aplicarPromosAlMenu(promos) {
+  const sesion = obtenerSesion();
+  if (!sesion) return; // solo logueados
+
+  // Por cada producto en el DOM, ver si tiene promo
+  document.querySelectorAll('.item[data-id]').forEach(card => {
+    const productoId = card.dataset.id;
+    if (!productoId) return;
+
+    const promo = promoParaProducto(productoId, promos);
+    if (!promo) return;
+
+    const precioOriginal = parseInt(card.dataset.precio || '0');
+    const { precio } = precioConPromo(precioOriginal, promo);
+
+    // Actualizar precio visible con tachado
+    const precioEl = card.querySelector('.item-price');
+    if (precioEl && !precioEl.dataset.promoAplicada) {
+      precioEl.dataset.promoAplicada = '1';
+      precioEl.innerHTML = `
+        <span style="text-decoration:line-through;color:#bbb;font-size:.85em;margin-right:.3rem;">$${precioOriginal.toLocaleString('es-CL')}</span>
+        <span style="color:#c0392b;font-weight:bold;">$${precio.toLocaleString('es-CL')}</span>
+      `;
+    }
+
+    // Badge "OFERTA" en la card
+    if (!card.querySelector('.badge-promo')) {
+      const badge = document.createElement('span');
+      badge.className = 'badge-promo';
+      badge.textContent = promo.tipo === 'descuento_pct' ? `-${promo.valor}%` : 'OFERTA';
+      badge.style.cssText = 'position:absolute;top:.4rem;left:.4rem;background:#c0392b;color:#fff;font-size:.65rem;font-weight:bold;padding:.15rem .4rem;border-radius:4px;letter-spacing:.05em;';
+      card.style.position = 'relative';
+      card.prepend(badge);
+    }
+
+    // Actualizar precio en dataset para carrito
+    card.dataset.precioPromo = precio;
+  });
+}
+
+function renderizarBundles(promos) {
+  const bundles = obtenerBundles(promos);
+  if (bundles.length === 0) return;
+
+  const sesion = obtenerSesion();
+  if (!sesion) return;
+
+  // Buscar o crear sección de ofertas
+  let seccion = document.getElementById('seccion-ofertas');
+  if (!seccion) {
+    seccion = document.createElement('div');
+    seccion.id = 'seccion-ofertas';
+    seccion.style.cssText = 'margin:1.5rem 0;';
+    const menu = document.getElementById('menu-productos');
+    if (menu) menu.prepend(seccion);
+  }
+
+  seccion.innerHTML = `
+    <h2 style="font-size:1rem;color:#8B1A2F;margin-bottom:.8rem;padding:0 1rem;">🏷️ Ofertas para ti</h2>
+    ${bundles.map(b => `
+      <div class="item item-clickable item-card" style="position:relative;margin-bottom:.5rem;"
+           data-bundle-id="${b.id}" data-bundle-precio="${b.valor}">
+        ${b.precio_original ? `<span class="badge-promo" style="position:absolute;top:.4rem;left:.4rem;background:#c0392b;color:#fff;font-size:.65rem;font-weight:bold;padding:.15rem .4rem;border-radius:4px;">OFERTA</span>` : ''}
+        <div style="flex:1;padding-left:${b.precio_original ? '2rem' : '0'}">
+          <div style="font-size:.95rem;font-weight:600;color:#3a1a0a;">${b.nombre}</div>
+          ${b.descripcion ? `<div style="font-size:.78rem;color:#888;margin-top:.2rem;">${b.descripcion}</div>` : ''}
+          ${b.cantidad > 1 ? `<div style="font-size:.75rem;color:#c0392b;margin-top:.2rem;">${b.cantidad} unidades</div>` : ''}
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          ${b.precio_original ? `<div style="text-decoration:line-through;color:#bbb;font-size:.8rem;">$${b.precio_original.toLocaleString('es-CL')}</div>` : ''}
+          <div style="font-weight:bold;color:#c0392b;">$${b.valor.toLocaleString('es-CL')}</div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+
+  // Listeners para agregar bundles al carrito
+  seccion.querySelectorAll('[data-bundle-id]').forEach(card => {
+    card.addEventListener('click', () => {
+      const bundle = bundles.find(b => b.id === card.dataset.bundleId);
+      if (!bundle) return;
+      agregarBundleAlCarrito(bundle);
+    });
+  });
+}
+
+function agregarBundleAlCarrito(bundle) {
+  // Agregar como ítem especial al carrito
+  const { agregar } = window._carritoAPI || {};
+  if (agregar) {
+    agregar({
+      id:     `bundle_${bundle.id}`,
+      nombre: bundle.nombre + (bundle.cantidad > 1 ? ` (${bundle.cantidad}u)` : ''),
+      precio: bundle.valor,
+      esBundle: true,
+    });
+  } else {
+    // Fallback: agregar via evento
+    document.dispatchEvent(new CustomEvent('agregar-bundle', { detail: bundle }));
+  }
+}
+
 function actualizarChipSesion() {
   const chip   = document.getElementById('chip-sesion');
   const nombre = document.getElementById('chip-nombre');
@@ -968,6 +1096,11 @@ function iniciarModalAuth() {
     if (r.ok) {
       exitoEl.textContent = `¡Hola ${r.cliente.nombre || ''}!`;
       actualizarChipSesion();
+      // Cargar promos para el cliente recién logueado
+      cargarPromociones().then(p => {
+        promociones = p;
+        if (p.length > 0) renderizarBannerPromos(p);
+      }).catch(() => {});
       setTimeout(() => { modal.style.display = 'none'; limpiarModal(); }, 1200);
     } else {
       errorEl.textContent = r.error;
