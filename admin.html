@@ -981,7 +981,7 @@
       });
       const todosItems = res.ok ? await res.json() : [];
       // Solo bundles/cantidades (multi-producto o cantidad > 1)
-      const promos = todosItems.filter(p => p.productos_ids?.length > 1 || p.cantidad > 1);
+      const promos = todosItems.filter(p => p.productos_ids?.length > 1 || p.cantidad > 1 || p.seleccionable);
 
       if (promos.length === 0) {
         lista.innerHTML = '<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:1rem;">Sin promociones creadas</div>';
