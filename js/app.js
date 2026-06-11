@@ -934,9 +934,11 @@ function renderizarBundles(promos) {
     ${bundles.map(b => `
       <div class="item item-clickable item-card" style="position:relative;margin-bottom:.5rem;"
            data-bundle-id="${b.id}" data-bundle-precio="${b.valor}">
-        ${b.precio_original ? `<span class="badge-promo" style="position:absolute;top:.4rem;left:.4rem;background:#c0392b;color:#fff;font-size:.65rem;font-weight:bold;padding:.15rem .4rem;border-radius:4px;">OFERTA</span>` : ''}
-        <div style="flex:1;padding-left:${b.precio_original ? '2rem' : '0'}">
-          <div style="font-size:.95rem;font-weight:600;color:#3a1a0a;">${b.nombre}</div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:.4rem;">
+            <div style="font-size:.95rem;font-weight:600;color:#3a1a0a;">${b.nombre}</div>
+            ${b.precio_original ? `<span class="badge-promo" style="background:#c0392b;color:#fff;font-size:.6rem;font-weight:bold;padding:.1rem .35rem;border-radius:4px;flex-shrink:0;">OFERTA</span>` : ''}
+          </div>
           ${b.descripcion ? `<div style="font-size:.78rem;color:#888;margin-top:.2rem;">${b.descripcion}</div>` : ''}
           ${b.cantidad > 1 ? `<div style="font-size:.75rem;color:#c0392b;margin-top:.2rem;">${b.cantidad} unidades</div>` : ''}
         </div>
