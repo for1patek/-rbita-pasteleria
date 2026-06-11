@@ -49,6 +49,9 @@ export function validarItems(items, productosDB) {
       return { valido: false, error: `Cantidad inválida para ${item.nombre}` };
     }
 
+    // Bundles/promos: no se validan contra productosDB (no son productos individuales)
+    if (item.esBundle) continue;
+
     // El precio del item debe coincidir con el precio real en BD
     const productoReal = productosDB.find(p => p.id === item.id);
     if (!productoReal) {
