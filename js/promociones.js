@@ -67,7 +67,7 @@ export function precioConPromo(precioOriginal, promo) {
 
 export function obtenerBundles(promociones) {
   return promociones.filter(p =>
-    p.cantidad > 1 || p.productos_ids?.length > 1
+    p.seleccionable || p.cantidad > 1 || p.productos_ids?.length > 1
   );
 }
 
