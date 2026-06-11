@@ -940,7 +940,7 @@ function renderizarBundles(promos) {
             ${b.precio_original ? `<span class="badge-promo" style="background:#c0392b;color:#fff;font-size:.6rem;font-weight:bold;padding:.1rem .35rem;border-radius:4px;flex-shrink:0;">OFERTA</span>` : ''}
           </div>
           ${b.descripcion ? `<div style="font-size:.78rem;color:#888;margin-top:.2rem;">${b.descripcion}</div>` : ''}
-          ${b.cantidad > 1 ? `<div style="font-size:.75rem;color:#c0392b;margin-top:.2rem;">${b.cantidad} unidades</div>` : ''}
+          ${b.seleccionable ? `<div style="font-size:.75rem;color:#c0392b;margin-top:.2rem;">Elige ${b.cantidad} sabor${b.cantidad > 1 ? 'es' : ''}</div>` : (b.cantidad > 1 ? `<div style="font-size:.75rem;color:#c0392b;margin-top:.2rem;">${b.cantidad} unidades</div>` : '')}
         </div>
         <div style="text-align:right;flex-shrink:0;">
           ${b.precio_original ? `<div style="text-decoration:line-through;color:#bbb;font-size:.8rem;">$${b.precio_original.toLocaleString('es-CL')}</div>` : ''}
@@ -961,6 +961,10 @@ function renderizarBundles(promos) {
 }
 
 function agregarBundleAlCarrito(bundle) {
+  if (bundle.seleccionable) {
+    abrirSelectorPromo(bundle);
+    return;
+  }
   agregarAlCarrito({
     id:       `bundle_${bundle.id}`,
     nombre:   bundle.nombre + (bundle.cantidad > 1 ? ` (${bundle.cantidad}u)` : ''),
@@ -969,6 +973,73 @@ function agregarBundleAlCarrito(bundle) {
     esBundle: true,
   });
   actualizarBotonFlotante();
+}
+
+// ── Selector de variantes para promos seleccionables ─
+
+function abrirSelectorPromo(bundle) {
+  const modal   = document.getElementById('modal-seleccion-promo');
+  const titulo  = document.getElementById('seleccion-promo-titulo');
+  const desc    = document.getElementById('seleccion-promo-desc');
+  const campos  = document.getElementById('seleccion-promo-campos');
+
+  titulo.textContent = bundle.nombre;
+  desc.textContent   = bundle.descripcion || `Elige ${bundle.cantidad} sabor${bundle.cantidad > 1 ? 'es' : ''}`;
+
+  // Buscar opciones disponibles: productos de esa categoría + variante
+  const opciones = productosDB.filter(p =>
+    p.categoria === bundle.categoria_seleccion &&
+    p.variante  === bundle.variante_seleccion
+  );
+
+  if (opciones.length === 0) {
+    campos.innerHTML = '<p style="color:#c0392b;font-size:.85rem;">No hay productos disponibles para esta promoción.</p>';
+    document.getElementById('btn-confirmar-seleccion-promo').style.display = 'none';
+  } else {
+    document.getElementById('btn-confirmar-seleccion-promo').style.display = 'block';
+    campos.innerHTML = Array.from({ length: bundle.cantidad }, (_, i) => `
+      <div style="margin-bottom:.8rem;">
+        <label style="font-size:.82rem;color:#888;display:block;margin-bottom:.3rem;">Sabor ${i + 1}</label>
+        <select class="sel-promo-variante" data-idx="${i}"
+          style="width:100%;padding:.7rem .9rem;border:1.5px solid #ddd;border-radius:10px;font-family:inherit;font-size:.92rem;outline:none;background:#fff;box-sizing:border-box;">
+          ${opciones.map(o => `<option value="${o.nombre}">${o.nombre}</option>`).join('')}
+        </select>
+      </div>
+    `).join('');
+  }
+
+  modal.style.display = 'flex';
+
+  // Confirmar
+  const btnConfirmar = document.getElementById('btn-confirmar-seleccion-promo');
+  const btnCancelar  = document.getElementById('btn-cancelar-seleccion-promo');
+
+  const handler = () => {
+    const selects = campos.querySelectorAll('.sel-promo-variante');
+    const elegidos = [...selects].map(s => s.value);
+    const detalle = elegidos.join(' + ');
+
+    agregarAlCarrito({
+      id:       `bundle_${bundle.id}_${Date.now()}`,
+      nombre:   `${bundle.nombre} (${detalle})`,
+      precio:   bundle.valor,
+      cantidad: 1,
+      esBundle: true,
+    });
+    actualizarBotonFlotante();
+    modal.style.display = 'none';
+    btnConfirmar.removeEventListener('click', handler);
+    btnCancelar.removeEventListener('click', cancelHandler);
+  };
+
+  const cancelHandler = () => {
+    modal.style.display = 'none';
+    btnConfirmar.removeEventListener('click', handler);
+    btnCancelar.removeEventListener('click', cancelHandler);
+  };
+
+  btnConfirmar.addEventListener('click', handler);
+  btnCancelar.addEventListener('click', cancelHandler);
 }
 
 function actualizarChipSesion() {
