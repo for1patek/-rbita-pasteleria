@@ -1008,13 +1008,11 @@
     document.getElementById('form-promo-titulo').textContent = promo ? 'Editar promoción' : 'Nueva promoción';
     document.getElementById('promo-nombre').value          = promo?.nombre ?? '';
     document.getElementById('promo-descripcion').value     = promo?.descripcion ?? '';
-    document.getElementById('promo-tipo').value            = promo?.tipo ?? 'descuento_pct';
     document.getElementById('promo-valor').value           = promo?.valor ?? '';
     document.getElementById('promo-cantidad').value        = promo?.cantidad ?? 1;
     document.getElementById('promo-precio-original').value = promo?.precio_original ?? '';
     document.getElementById('promo-fecha-fin').value       = promo?.fecha_fin ? promo.fecha_fin.slice(0,10) : '';
     document.getElementById('promo-error').textContent     = '';
-    actualizarLabelValor();
 
     // Cargar productos con checkboxes
     const productos = await cargarProductosParaPromo();
@@ -1032,13 +1030,6 @@
     document.getElementById('form-promo').style.display = 'block';
     document.getElementById('form-promo').scrollIntoView({ behavior: 'smooth' });
   }
-
-  function actualizarLabelValor() {
-    const tipo = document.getElementById('promo-tipo').value;
-    document.getElementById('label-valor').textContent = tipo === 'descuento_pct' ? 'Descuento (%)' : 'Precio final ($)';
-  }
-
-  document.getElementById('promo-tipo')?.addEventListener('change', actualizarLabelValor);
 
   document.getElementById('btn-nueva-promo')?.addEventListener('click', () => abrirFormPromo());
   document.getElementById('btn-cancelar-promo')?.addEventListener('click', () => {
