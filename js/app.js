@@ -12,7 +12,7 @@ import { enviarPedido }            from './pedido.js';
 import { DELIVERY }                from './config.js';
 import { leerConfig, deliveryDisponible, minAHora } from './config-panel.js';
 import { cargarPromociones, promoParaProducto, precioConPromo, obtenerBundles, fmtCLP as fmtPromo } from './promociones.js';
-import { obtenerSesion, cerrarSesion, registrar, login, estaLogueado,
+import { obtenerSesion, cerrarSesion, solicitarRegistro, confirmarRegistro, login, estaLogueado,
          solicitarResetPin, verificarResetPin } from './auth.js';
 
 // ── Estado global ─────────────────────────
@@ -972,7 +972,7 @@ function agregarBundleAlCarrito(bundle) {
     cantidad: 1,
     esBundle: true,
   });
-  actualizarBotonFlotante();
+  actualizarBotonFlotante(obtenerResumen());
 }
 
 // ── Selector de variantes para promos seleccionables ─
@@ -1026,7 +1026,7 @@ function abrirSelectorPromo(bundle) {
       cantidad: 1,
       esBundle: true,
     });
-    actualizarBotonFlotante();
+    actualizarBotonFlotante(obtenerResumen());
     modal.style.display = 'none';
     btnConfirmar.removeEventListener('click', handler);
     btnCancelar.removeEventListener('click', cancelHandler);
@@ -1073,7 +1073,7 @@ function iniciarModalAuth() {
 
   // ── Helpers de vistas ─────────────────────
   function mostrarVista(id) {
-    ['auth-vista-principal', 'auth-vista-reset-email', 'auth-vista-reset-codigo']
+    ['auth-vista-principal', 'auth-vista-verificar-registro', 'auth-vista-reset-email', 'auth-vista-reset-codigo']
       .forEach(v => document.getElementById(v).style.display = v === id ? 'block' : 'none');
     errorEl.textContent = '';
     exitoEl.textContent = '';
@@ -1083,7 +1083,7 @@ function iniciarModalAuth() {
     // Limpiar todos los inputs del modal
     ['auth-nombre','auth-email-reg','auth-telefono-reg','auth-pin-reg',
      'auth-telefono-login','auth-pin-login',
-     'auth-email-reset','auth-codigo-otp','auth-pin-nuevo']
+     'auth-email-reset','auth-codigo-otp','auth-pin-nuevo','auth-codigo-registro']
       .forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
@@ -1133,6 +1133,9 @@ function iniciarModalAuth() {
   });
 
   // ── Registro ──────────────────────────────
+  let _registroPendienteEmail = '';
+  let _registroPendienteNombre = '';
+
   document.getElementById('btn-registrar')?.addEventListener('click', async () => {
     const btn    = document.getElementById('btn-registrar');
     const nombre = document.getElementById('auth-nombre').value.trim();
@@ -1142,20 +1145,53 @@ function iniciarModalAuth() {
 
     errorEl.textContent = '';
     btn.disabled        = true;
-    btn.textContent     = 'Creando cuenta...';
+    btn.textContent     = 'Enviando código...';
 
-    const r = await registrar({ deviceId, telefono: tel, pin, nombre, email });
+    const r = await solicitarRegistro({ deviceId, telefono: tel, pin, nombre, email });
 
     btn.disabled    = false;
     btn.textContent = 'Crear cuenta';
 
     if (r.ok) {
+      _registroPendienteEmail  = r.email;
+      _registroPendienteNombre = nombre;
+      document.getElementById('auth-codigo-registro').value = '';
+      mostrarVista('auth-vista-verificar-registro');
+    } else {
+      errorEl.textContent = r.error;
+    }
+  });
+
+  // ── Verificar código de registro ──────────
+  document.getElementById('btn-confirmar-registro')?.addEventListener('click', async () => {
+    const btn    = document.getElementById('btn-confirmar-registro');
+    const codigo = document.getElementById('auth-codigo-registro').value.trim();
+
+    errorEl.textContent = '';
+    exitoEl.textContent = '';
+    btn.disabled        = true;
+    btn.textContent     = 'Verificando...';
+
+    const r = await confirmarRegistro({ email: _registroPendienteEmail, codigo });
+
+    btn.disabled    = false;
+    btn.textContent = 'Confirmar';
+
+    if (r.ok) {
       exitoEl.textContent = `¡Bienvenido/a ${r.cliente.nombre || ''}! Cuenta creada.`;
       actualizarChipSesion();
+      cargarPromociones().then(p => {
+        promociones = p;
+        if (p.length > 0) renderizarBannerPromos(p);
+      }).catch(() => {});
       setTimeout(() => { modal.style.display = 'none'; limpiarModal(); }, 1500);
     } else {
       errorEl.textContent = r.error;
     }
+  });
+
+  document.getElementById('btn-volver-desde-verificar')?.addEventListener('click', () => {
+    mostrarVista('auth-vista-principal');
   });
 
   // ── Login ─────────────────────────────────
