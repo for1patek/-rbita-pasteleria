@@ -280,6 +280,19 @@
 
       </div><!-- /auth-vista-principal -->
 
+      <!-- ── VISTA VERIFICAR REGISTRO ── -->
+      <div id="auth-vista-verificar-registro" style="display:none;">
+        <h3 style="margin:0 0 .5rem; font-size:1.05rem; color:#3a1a0a;">Verifica tu email</h3>
+        <p style="font-size:.85rem; color:#888; margin:0 0 1.2rem;">Enviamos un código de 6 dígitos a tu correo. Revisa tu bandeja (y spam). El código expira en 15 minutos.</p>
+        <input id="auth-codigo-registro" type="text" placeholder="Código de 6 dígitos" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+          style="width:100%; padding:.75rem 1rem; border:1.5px solid #ddd; border-radius:10px; font-family:inherit; font-size:1.3rem; letter-spacing:.3rem; text-align:center; margin-bottom:1rem; outline:none; background:#fff; box-sizing:border-box;">
+        <button id="btn-confirmar-registro"
+          style="width:100%; padding:.85rem; background:#8B1A2F; color:#fff; border:none; border-radius:10px; font-family:inherit; font-size:1rem; font-weight:bold; cursor:pointer;">
+          Confirmar
+        </button>
+        <button id="btn-volver-desde-verificar" style="width:100%; margin-top:.8rem; background:none; border:none; color:#8B1A2F; font-family:inherit; font-size:.85rem; cursor:pointer; text-decoration:underline;">← Volver y corregir datos</button>
+      </div>
+
       <!-- ── VISTA RESET — paso 1: pedir email ── -->
       <div id="auth-vista-reset-email" style="display:none;">
         <button id="btn-volver-desde-reset" style="background:none; border:none; color:#8B1A2F; font-family:inherit; font-size:.85rem; cursor:pointer; margin-bottom:1rem; padding:0;">← Volver</button>
