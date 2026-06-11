@@ -902,7 +902,7 @@ function aplicarPromosAlMenu(promos) {
       const badge = document.createElement('span');
       badge.className = 'badge-promo';
       badge.textContent = promo.tipo === 'descuento_pct' ? `-${promo.valor}%` : 'OFERTA';
-      badge.style.cssText = 'position:absolute;top:.4rem;left:.4rem;background:#c0392b;color:#fff;font-size:.65rem;font-weight:bold;padding:.15rem .4rem;border-radius:4px;letter-spacing:.05em;';
+      badge.style.cssText = 'position:absolute;top:.4rem;right:.4rem;background:#c0392b;color:#fff;font-size:.65rem;font-weight:bold;padding:.15rem .4rem;border-radius:4px;letter-spacing:.05em;';
       card.style.position = 'relative';
       card.prepend(badge);
     }
