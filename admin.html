@@ -368,6 +368,25 @@
           style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.9rem;outline:none;">
       </div>
 
+      <div style="margin-bottom:1.2rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.8rem .9rem;">
+        <label style="display:flex;align-items:center;gap:.6rem;cursor:pointer;font-size:.88rem;">
+          <input type="checkbox" id="promo-seleccionable" style="accent-color:var(--primary);width:18px;height:18px;">
+          El cliente elige el sabor/variante de cada unidad
+        </label>
+        <div id="promo-seleccion-config" style="display:none;margin-top:.8rem;">
+          <div class="field-label">Categoría a elegir</div>
+          <select id="promo-categoria-seleccion" style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;color:var(--text);font-family:var(--font);font-size:.88rem;outline:none;margin-bottom:.6rem;">
+            <option value="galleta">Galletas</option>
+          </select>
+          <div class="field-label">Variante a elegir</div>
+          <select id="promo-variante-seleccion" style="width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;color:var(--text);font-family:var(--font);font-size:.88rem;outline:none;">
+            <option value="kilo">Kilo</option>
+            <option value="bolsa">Bolsa</option>
+          </select>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.5rem;">El cliente elegirá ${"${cantidad}"} sabores de esta variante (usa el campo "Cantidad por producto" de arriba).</div>
+        </div>
+      </div>
+
       <div style="display:flex;gap:.6rem;">
         <button id="btn-guardar-promo" style="flex:1;padding:.75rem;background:var(--primary);color:#1a1a1a;border:none;border-radius:10px;font-family:var(--font);font-size:.9rem;font-weight:bold;cursor:pointer;">Guardar</button>
         <button id="btn-cancelar-promo" style="padding:.75rem 1rem;background:none;border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:var(--font);font-size:.9rem;cursor:pointer;">Cancelar</button>
@@ -1013,6 +1032,10 @@
     document.getElementById('promo-precio-original').value = promo?.precio_original ?? '';
     document.getElementById('promo-fecha-fin').value       = promo?.fecha_fin ? promo.fecha_fin.slice(0,10) : '';
     document.getElementById('promo-error').textContent     = '';
+    document.getElementById('promo-seleccionable').checked = promo?.seleccionable ?? false;
+    document.getElementById('promo-categoria-seleccion').value = promo?.categoria_seleccion ?? 'galleta';
+    document.getElementById('promo-variante-seleccion').value  = promo?.variante_seleccion  ?? 'kilo';
+    document.getElementById('promo-seleccion-config').style.display = promo?.seleccionable ? 'block' : 'none';
 
     // Cargar productos con checkboxes
     const productos = await cargarProductosParaPromo();
@@ -1030,6 +1053,14 @@
     document.getElementById('form-promo').style.display = 'block';
     document.getElementById('form-promo').scrollIntoView({ behavior: 'smooth' });
   }
+
+  document.getElementById('promo-seleccionable')?.addEventListener('change', (e) => {
+    document.getElementById('promo-seleccion-config').style.display = e.target.checked ? 'block' : 'none';
+    // Si es seleccionable, ocultar selector de productos fijos
+    const lista = document.getElementById('promo-productos-lista').closest('div').parentElement;
+    if (lista) lista.style.opacity = e.target.checked ? '.4' : '1';
+    if (lista) lista.style.pointerEvents = e.target.checked ? 'none' : 'auto';
+  });
 
   document.getElementById('btn-nueva-promo')?.addEventListener('click', () => abrirFormPromo());
   document.getElementById('btn-cancelar-promo')?.addEventListener('click', () => {
@@ -1050,12 +1081,17 @@
     const fechaFin = document.getElementById('promo-fecha-fin').value || null;
     const descripcion = document.getElementById('promo-descripcion').value.trim() || null;
 
-    const productosIds = [...document.querySelectorAll('#promo-productos-lista input:checked')]
-      .map(c => c.value);
+    const seleccionable = document.getElementById('promo-seleccionable').checked;
+    const categoriaSel  = seleccionable ? document.getElementById('promo-categoria-seleccion').value : null;
+    const varianteSel   = seleccionable ? document.getElementById('promo-variante-seleccion').value  : null;
+
+    const productosIds = seleccionable
+      ? [] // promos seleccionables no usan productos_ids fijos
+      : [...document.querySelectorAll('#promo-productos-lista input:checked')].map(c => c.value);
 
     if (!nombre)              { errorEl.textContent = 'Ingresa un nombre'; return; }
     if (!valor || valor <= 0) { errorEl.textContent = 'Ingresa un valor válido'; return; }
-    if (productosIds.length === 0) { errorEl.textContent = 'Selecciona al menos un producto'; return; }
+    if (!seleccionable && productosIds.length === 0) { errorEl.textContent = 'Selecciona al menos un producto'; return; }
     if (tipo === 'descuento_pct' && valor > 100) { errorEl.textContent = 'El descuento no puede superar 100%'; return; }
 
     btn.disabled = true;
@@ -1066,6 +1102,9 @@
       productos_ids: productosIds,
       precio_original: precioOriginal,
       fecha_fin: fechaFin ? new Date(fechaFin + 'T23:59:00').toISOString() : null,
+      seleccionable,
+      categoria_seleccion: categoriaSel,
+      variante_seleccion:  varianteSel,
       updated_at: new Date().toISOString(),
     };
 
