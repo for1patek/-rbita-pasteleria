@@ -79,22 +79,21 @@ export async function buscarPorDevice(deviceId) {
 // ── Registrar cliente nuevo ───────────────
 // Campos requeridos: nombre, telefono, pin, email
 
-export async function registrar({ deviceId, telefono, pin, nombre, email }) {
+export async function solicitarRegistro({ deviceId, telefono, pin, nombre, email }) {
   const tel = normalizarTelefono(telefono);
 
   if (!telefonoValido(telefono)) return { ok: false, error: 'Teléfono inválido. Ej: 9 1234 5678' };
   if (!pinValido(pin))           return { ok: false, error: 'El PIN debe ser de 4 dígitos' };
-  if (!email || !emailValido(email)) return { ok: false, error: 'Email inválido. Lo necesitas para recuperar tu PIN' };
+  if (!email || !emailValido(email)) return { ok: false, error: 'Email inválido. Lo necesitas para verificar tu cuenta' };
 
   const nombreLimpio = sanitizar(nombre || '').slice(0, 60);
   const emailLimpio  = String(email).trim().toLowerCase();
   const hash         = await hashPin(tel, pin);
 
-  // Verificar duplicado por teléfono
+  // Pre-chequeo rápido de duplicados (la Edge Function valida de nuevo igual)
   const existeTel = await buscarPorTelefono(tel);
   if (existeTel) return { ok: false, error: 'Este teléfono ya tiene una cuenta' };
 
-  // Verificar duplicado por email
   const resEmail = await fetch(
     `${SUPABASE_URL}/rest/v1/clientes?email=eq.${encodeURIComponent(emailLimpio)}&select=id&limit=1`,
     { headers: headers() }
@@ -102,57 +101,51 @@ export async function registrar({ deviceId, telefono, pin, nombre, email }) {
   const rowsEmail = resEmail.ok ? await resEmail.json() : [];
   if (rowsEmail.length > 0) return { ok: false, error: 'Este email ya está registrado' };
 
-  // Ver si el device tiene registro anónimo (sin teléfono)
-  const anonimo = await buscarPorDevice(deviceId);
-
-  let res;
-  if (anonimo && !anonimo.telefono) {
-    res = await fetch(
-      `${SUPABASE_URL}/rest/v1/clientes?device_id=eq.${encodeURIComponent(deviceId)}`,
-      {
-        method:  'PATCH',
-        headers: headers({ 'Prefer': 'return=representation' }),
-        body:    JSON.stringify({
-          telefono:   tel,
-          pin_hash:   hash,
-          nombre:     nombreLimpio,
-          email:      emailLimpio,
-          updated_at: new Date().toISOString(),
-        }),
-      }
-    );
-  } else {
-    res = await fetch(
-      `${SUPABASE_URL}/rest/v1/clientes`,
-      {
-        method:  'POST',
-        headers: headers({ 'Prefer': 'return=representation' }),
-        body:    JSON.stringify({
-          device_id:  deviceId,
-          telefono:   tel,
-          pin_hash:   hash,
-          nombre:     nombreLimpio,
-          email:      emailLimpio,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }),
-      }
-    );
-  }
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    if (err.code === '23505') {
-      if (err.message?.includes('email')) return { ok: false, error: 'Este email ya está registrado' };
-      return { ok: false, error: 'Este teléfono ya tiene una cuenta' };
+  // Enviar código de verificación por email
+  const res = await fetch(
+    `${SUPABASE_URL}/functions/v1/enviar-codigo-registro`,
+    {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({
+        email:     emailLimpio,
+        device_id: deviceId,
+        telefono:  tel,
+        pin_hash:  hash,
+        nombre:    nombreLimpio,
+      }),
     }
-    return { ok: false, error: 'Error al crear la cuenta' };
+  );
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    return { ok: false, error: data.error || 'Error al enviar el código de verificación' };
+  }
+  return { ok: true, email: emailLimpio };
+}
+
+// ── Confirmar registro con código OTP ─────
+
+export async function confirmarRegistro({ email, codigo }) {
+  if (!emailValido(email))      return { ok: false, error: 'Email inválido' };
+  if (!/^\d{6}$/.test(codigo)) return { ok: false, error: 'Código de 6 dígitos requerido' };
+
+  const res = await fetch(
+    `${SUPABASE_URL}/functions/v1/verificar-codigo-registro`,
+    {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ email: email.trim().toLowerCase(), codigo: codigo.trim() }),
+    }
+  );
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) {
+    return { ok: false, error: data.error || 'Código incorrecto o expirado' };
   }
 
-  const rows    = await res.json();
-  const cliente = Array.isArray(rows) ? rows[0] : rows;
-  guardarSesion(cliente);
-  return { ok: true, cliente };
+  guardarSesion(data.cliente);
+  return { ok: true, cliente: data.cliente };
 }
 
 // ── Login ─────────────────────────────────
