@@ -34,7 +34,8 @@ export async function cargarPromociones() {
 export function promoParaProducto(productoId, promociones) {
   const activas = promociones.filter(p =>
     p.productos_ids?.includes(productoId) &&
-    p.cantidad === 1 // solo promos de unidad simple aplican al producto directo
+    p.cantidad === 1 &&
+    p.productos_ids?.length === 1 // solo descuentos de 1 producto, no bundles
   );
   if (activas.length === 0) return null;
   // Priorizar la de mayor descuento
