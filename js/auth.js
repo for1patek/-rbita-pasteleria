@@ -79,6 +79,83 @@ export async function buscarPorDevice(deviceId) {
 // ── Registrar cliente nuevo ───────────────
 // Campos requeridos: nombre, telefono, pin, email
 
+// ── Registro directo (sin verificación OTP) ──
+// Usar mientras no haya dominio verificado para envío de emails.
+// Crea la cuenta inmediatamente, igual que el flujo anterior.
+
+export async function registrarDirecto({ deviceId, telefono, pin, nombre, email }) {
+  const tel = normalizarTelefono(telefono);
+
+  if (!telefonoValido(telefono)) return { ok: false, error: 'Teléfono inválido. Ej: 9 1234 5678' };
+  if (!pinValido(pin))           return { ok: false, error: 'El PIN debe ser de 4 dígitos' };
+  if (!email || !emailValido(email)) return { ok: false, error: 'Email inválido. Lo necesitas para recuperar tu PIN' };
+
+  const nombreLimpio = sanitizar(nombre || '').slice(0, 60);
+  const emailLimpio  = String(email).trim().toLowerCase();
+  const hash         = await hashPin(tel, pin);
+
+  const existeTel = await buscarPorTelefono(tel);
+  if (existeTel) return { ok: false, error: 'Este teléfono ya tiene una cuenta' };
+
+  const resEmail = await fetch(
+    `${SUPABASE_URL}/rest/v1/clientes?email=eq.${encodeURIComponent(emailLimpio)}&select=id&limit=1`,
+    { headers: headers() }
+  );
+  const rowsEmail = resEmail.ok ? await resEmail.json() : [];
+  if (rowsEmail.length > 0) return { ok: false, error: 'Este email ya está registrado' };
+
+  const anonimo = await buscarPorDevice(deviceId);
+
+  let res;
+  if (anonimo && !anonimo.telefono) {
+    res = await fetch(
+      `${SUPABASE_URL}/rest/v1/clientes?device_id=eq.${encodeURIComponent(deviceId)}`,
+      {
+        method:  'PATCH',
+        headers: headers({ 'Prefer': 'return=representation' }),
+        body:    JSON.stringify({
+          telefono:   tel,
+          pin_hash:   hash,
+          nombre:     nombreLimpio,
+          email:      emailLimpio,
+          updated_at: new Date().toISOString(),
+        }),
+      }
+    );
+  } else {
+    res = await fetch(
+      `${SUPABASE_URL}/rest/v1/clientes`,
+      {
+        method:  'POST',
+        headers: headers({ 'Prefer': 'return=representation' }),
+        body:    JSON.stringify({
+          device_id:  deviceId,
+          telefono:   tel,
+          pin_hash:   hash,
+          nombre:     nombreLimpio,
+          email:      emailLimpio,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }),
+      }
+    );
+  }
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    if (err.code === '23505') {
+      if (err.message?.includes('email')) return { ok: false, error: 'Este email ya está registrado' };
+      return { ok: false, error: 'Este teléfono ya tiene una cuenta' };
+    }
+    return { ok: false, error: 'Error al crear la cuenta' };
+  }
+
+  const rows    = await res.json();
+  const cliente = Array.isArray(rows) ? rows[0] : rows;
+  guardarSesion(cliente);
+  return { ok: true, cliente };
+}
+
 export async function solicitarRegistro({ deviceId, telefono, pin, nombre, email }) {
   const tel = normalizarTelefono(telefono);
 
