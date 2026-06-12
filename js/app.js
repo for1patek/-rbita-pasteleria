@@ -12,7 +12,7 @@ import { enviarPedido }            from './pedido.js';
 import { DELIVERY }                from './config.js';
 import { leerConfig, deliveryDisponible, minAHora } from './config-panel.js';
 import { cargarPromociones, promoParaProducto, precioConPromo, obtenerBundles, fmtCLP as fmtPromo } from './promociones.js';
-import { obtenerSesion, cerrarSesion, solicitarRegistro, confirmarRegistro, login, estaLogueado,
+import { obtenerSesion, cerrarSesion, registrarDirecto, solicitarRegistro, confirmarRegistro, login, estaLogueado,
          solicitarResetPin, verificarResetPin } from './auth.js';
 
 // ── Estado global ─────────────────────────
@@ -1133,9 +1133,6 @@ function iniciarModalAuth() {
   });
 
   // ── Registro ──────────────────────────────
-  let _registroPendienteEmail = '';
-  let _registroPendienteNombre = '';
-
   document.getElementById('btn-registrar')?.addEventListener('click', async () => {
     const btn    = document.getElementById('btn-registrar');
     const nombre = document.getElementById('auth-nombre').value.trim();
@@ -1145,18 +1142,22 @@ function iniciarModalAuth() {
 
     errorEl.textContent = '';
     btn.disabled        = true;
-    btn.textContent     = 'Enviando código...';
+    btn.textContent     = 'Creando cuenta...';
 
-    const r = await solicitarRegistro({ deviceId, telefono: tel, pin, nombre, email });
+    // Registro directo: sin verificación por email (requiere dominio verificado en Resend)
+    const r = await registrarDirecto({ deviceId, telefono: tel, pin, nombre, email });
 
     btn.disabled    = false;
     btn.textContent = 'Crear cuenta';
 
     if (r.ok) {
-      _registroPendienteEmail  = r.email;
-      _registroPendienteNombre = nombre;
-      document.getElementById('auth-codigo-registro').value = '';
-      mostrarVista('auth-vista-verificar-registro');
+      exitoEl.textContent = `¡Bienvenido/a ${r.cliente.nombre || ''}! Cuenta creada.`;
+      actualizarChipSesion();
+      cargarPromociones().then(p => {
+        promociones = p;
+        if (p.length > 0) renderizarBannerPromos(p);
+      }).catch(() => {});
+      setTimeout(() => { modal.style.display = 'none'; limpiarModal(); }, 1500);
     } else {
       errorEl.textContent = r.error;
     }
